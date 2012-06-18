@@ -80,10 +80,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
     
+    // Attempt to activate auto focus
     private void tryAutoFocus(){
     	if(mCamera.getParameters().getFocusMode().compareTo("FOCUS_MODE_AUTO") == 0 ||  
     			mCamera.getParameters().getFocusMode().compareTo("FOCUS_MODE_MACRO") == 0){
     		mCamera.autoFocus(null);
     	}
+    }
+    
+    // Restart camera preview between shots
+    public void restartPreview(){
+    	mCamera.startPreview();
     }
 }
