@@ -1,3 +1,24 @@
+/** TimeLapse: A timelapse tool for Android
+ *  
+ *  TimeLapseActivity 
+ *  -- The application view controller. It safely obtains, manages, and releases
+ *  an instance of the system Camera. 
+ *  + Preview imagery is displayed via CameraPreview, which is passed the instance of the system Camera
+ *  + The shutter listener (shutterListener() ) is attached to the root RelativeLayout described in main.xml 
+ *  + Shutter feedback via showShutterFeedback()
+ *  + Overlay the previously taken photo on the live camera preview via setCameraOverlay()
+ * 
+ *  CameraPreview
+ *  -- The view displaying live camera data. Passed system Camera instance.
+ *  
+ *  CameraUtils
+ *  -- Camera callback methods which reference TimeLapseActivity methods (i.e: Camera shutter callback - > TimeLapseActivity.showShutterFeedback())
+ *  
+ *  FileUtils
+ *  -- Generic photo/video writing to sdcard
+ *  
+ */
+
 package pro.dbro.timelapse;
 
 import java.io.File;
@@ -41,35 +62,24 @@ public class TimeLapseActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.main);
+        setContentView(R.layout.camera);
         
         // Store context for use by static methods
         c = getApplicationContext();
         
-        // TEST: make imageview transparent
+        // Make cameraOverlay ImageView transparent
         cameraOverlay = (ImageView) findViewById(id.camera_overlay);
         cameraOverlay.setAlpha(100);
 
         // Obtain camera instance
         mCamera = getCameraInstance();
-        // Show alert if camera not available
+        
         if (mCamera == null){
-        	AlertDialog noCameraAlertDialog = new AlertDialog.Builder(c)
-        		.setTitle("Your Title")
-    			.setMessage("Click yes to exit!")
-				.setNeutralButton("Okay!", new OnClickListener(){
-					@Override
-					public void onClick(DialogInterface thisDialog, int arg1) {
-						// Cancel the dialog
-						thisDialog.cancel();	
-					}
-				}).create();
-
-				noCameraAlertDialog.show();
+        	showCameraErrorDialog();
         }
-        // If camera available, proceed
         else{
-	        // Obtain SurfaceView for camera preview
+        	// Camera is available. Onward Ho!
+	        // Obtain SurfaceView for displaying camera preview
 	        mCameraPreview = new CameraPreview(this, mCamera);
 	        FrameLayout preview = (FrameLayout) findViewById(id.camera_preview);
 	        preview.addView(mCameraPreview);
@@ -80,6 +90,7 @@ public class TimeLapseActivity extends Activity {
         }
        
     }
+    /** End OnCreate() */
     
     /** A safe way to get an instance of the Camera object. */
     public static Camera getCameraInstance(){
@@ -130,7 +141,7 @@ public class TimeLapseActivity extends Activity {
 		}
     };
     
-    // Display the just-captured picture as the camera overlay
+    /** Display the just-captured picture as the camera overlay */
     public static void setCameraOverlay(String filepath){
     	// Decode the just-captured picture from file and display it 
     	// in the cameraOverlay ImageView
@@ -148,6 +159,8 @@ public class TimeLapseActivity extends Activity {
     	mCameraPreview.restartPreview();
     }
 
+    /** Handle shutter action feedback 
+     *  CALLED BY: CameraUtils.mShutterFeedback (callback method passed to mCamera.takePicture(...) via shutterListener) */
 	public static void showShutterFeedback() {
 		CharSequence text = "Snap!";
 		int duration = Toast.LENGTH_SHORT;
@@ -157,12 +170,28 @@ public class TimeLapseActivity extends Activity {
 		
 	}
 	
-	// Release Camera when application is finished 
+	/** Release Camera when application is finished */
 	private void releaseCamera(){
         if (mCamera != null){
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
     }
+	
+	/** Show an AlertDialog corresponding to a Camera Error */
+	private void showCameraErrorDialog(){
+		AlertDialog noCameraAlertDialog = new AlertDialog.Builder(c)
+		.setTitle(getResources().getStringArray(R.array.camera_error_dialog)[0])
+		.setMessage(getResources().getStringArray(R.array.camera_error_dialog)[1])
+		.setNeutralButton(getString(R.string.dialog_ok), new OnClickListener(){
+			@Override
+			public void onClick(DialogInterface thisDialog, int arg1) {
+				// Cancel the dialog
+				thisDialog.cancel();	
+			}
+		}).create();
+
+		noCameraAlertDialog.show();
+	}
    
 }

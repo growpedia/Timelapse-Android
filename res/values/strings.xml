@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, TimeLapseActivity!</string>
     <string name="app_name">TimeLapse</string>
+    
+    <!--  Alert Dialogs -->
+    <string name="dialog_ok">Okay!</string>
+    <string-array name="camera_error_dialog">
+        <item>Camera Error</item>
+        <item>The device camera is not available.</item>
+    </string-array>
 
 </resources>
