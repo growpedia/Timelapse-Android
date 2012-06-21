@@ -1,6 +1,7 @@
 package pro.dbro.timelapse;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -25,18 +26,25 @@ public class ListItemRelativeLayout extends RelativeLayout {
 	
 		// On any screen touch outside input
 		public boolean onInterceptTouchEvent(MotionEvent me){
-			
 			if(me.getAction() == me.ACTION_DOWN ){
-				Log.d("ListItemRelativeLayout",this.getTag().toString());
+				// ListItemRelativeLayout tags:
+				// 0 : timelapse id corresponding to this view
+				// 1 : "camera" or "view", indicating the behavior for ListView item select
+				
+				Log.d("ListItemRelativeLayout",this.getTag(R.id.view_related_timelapse).toString());
 				// If the touch occurs in the area of the camera icon, go to picture
 				if(isPointInsideView(me.getRawX(), me.getRawY(), this.findViewById(R.id.list_item_camera))){
-					Log.d("ListItemRelativeLayout","camera touched");
-					return true; // event consumed
+					Log.d("ListItemRelativeLayout","camera");
+					this.setTag(R.id.view_onclick_action,"camera");
+				}
+				else{
+					Log.d("ListItemRelativeLayout","view");
+					this.setTag(R.id.view_onclick_action,"view");
 				}
 			}
-			Log.d("ListItemRelativeLayout","camera not touched");
+			
 			// pass touch onward
-			return false;
+			return true;
 		}
 		
 		public boolean onTouchEvent(MotionEvent me){

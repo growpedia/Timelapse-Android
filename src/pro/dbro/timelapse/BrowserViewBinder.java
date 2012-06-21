@@ -11,7 +11,7 @@ public class BrowserViewBinder implements android.widget.SimpleAdapter.ViewBinde
 		
 		Log.d("BrowserViewBinder", browser_list_item.getClass().toString());
 		if( browser_list_item.getClass().toString().equals("class pro.dbro.timelapse.ListItemRelativeLayout")){
-			browser_list_item.setTag(data);
+			browser_list_item.setTag(R.id.view_related_timelapse, data);
 			return true; // do not ask SimpleAdapter to do binding on this view
 		}
 		

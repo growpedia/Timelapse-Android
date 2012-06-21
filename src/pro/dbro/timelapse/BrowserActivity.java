@@ -11,6 +11,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -37,6 +38,20 @@ public class BrowserActivity extends SherlockListActivity {
         SimpleAdapter browserAdapter = new SimpleAdapter(this.getApplicationContext(), loadItems(), R.layout.browser_list_item, BROWSER_LIST_ITEM_KEYS, BROWSER_LIST_ITEM_VALUES);
         browserAdapter.setViewBinder(new BrowserViewBinder());
         setListAdapter(browserAdapter);
+    }
+    
+    // Handle listview item select
+    @Override 
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        if(((String)v.getTag(R.id.view_onclick_action)).equals("camera")){
+        	//  launch CameraActivity
+        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
+            startActivity(intent);
+        }
+        else if(((String)v.getTag(R.id.view_onclick_action)).equals("view")){
+        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
+            startActivity(intent);
+        }
     }
     
     // Create Map describing ListView contents. Fed as "data" to SimpleAdapter constructor

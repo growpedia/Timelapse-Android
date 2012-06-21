@@ -46,7 +46,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-public class TimeLapseActivity extends Activity {
+public class CameraActivity extends Activity {
 	private Camera mCamera;
 	private static CameraPreview mCameraPreview;
 	private static Context c;

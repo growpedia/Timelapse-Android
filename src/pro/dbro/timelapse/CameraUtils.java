@@ -39,7 +39,7 @@ public class CameraUtils {
 	            Log.d(TAG, "Error accessing file: " + e.getMessage());
 	        }
 	        Log.d(TAG,"Picture saved: " + pictureFile.getAbsolutePath());
-	        TimeLapseActivity.setCameraOverlay(pictureFile.getAbsolutePath());
+	        CameraActivity.setCameraOverlay(pictureFile.getAbsolutePath());
 	        
 	    }
 	};
@@ -50,7 +50,7 @@ public class CameraUtils {
 		@Override
 		public void onShutter() {
 			// Yield to theh activity to display shutter feedback
-			TimeLapseActivity.showShutterFeedback();
+			CameraActivity.showShutterFeedback();
 		}
 		
 	};
