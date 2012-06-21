@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Create TimeLapse dialog -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+    <EditText 
+        android:id="@+id/create_timelapse_title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/create_timelapse_dialog_title_hint"/>
+    <EditText 
+        android:id="@+id/create_timelapse_description"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/create_timelapse_dialog_description_hint"/>
+        
+</LinearLayout>
