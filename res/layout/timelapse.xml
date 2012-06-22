@@ -15,5 +15,16 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:hint="@string/create_timelapse_dialog_description_hint"/>
+    <Button 
+        android:id="@+id/create_timelapse_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:padding="20dp"
+        android:textSize="20dp"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:text="@string/create_timelapse_button"
+        />
         
 </LinearLayout>

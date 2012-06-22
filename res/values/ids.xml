@@ -2,4 +2,6 @@
 <resources>
 <item type="id" name="view_onclick_action" />
 <item type="id" name="view_related_timelapse" />
+
+<item type="id" name="filesystem_parse_complete" />
 </resources>

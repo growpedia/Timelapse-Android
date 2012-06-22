@@ -14,5 +14,6 @@
     <string name="create_timelapse_dialog_prompt">Create TimeLapse</string>
     <string name="create_timelapse_dialog_title_hint">Title</string>
     <string name="create_timelapse_dialog_description_hint">Description</string>
+    <string name="create_timelapse_button">Create TimeLapse!</string>
 
 </resources>
