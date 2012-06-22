@@ -22,7 +22,6 @@ public class CameraUtils {
 
 	    @Override
 	    public void onPictureTaken(byte[] data, Camera camera) {
-
 	        File pictureFile = FileUtils.getOutputMediaFile(FileUtils.MEDIA_TYPE_IMAGE);
 	        if (pictureFile == null){
 	            Log.d(TAG, "Error creating media file, check storage permissions");

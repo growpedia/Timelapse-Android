@@ -30,11 +30,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -49,7 +51,8 @@ import android.widget.Toast;
 public class CameraActivity extends Activity {
 	private Camera mCamera;
 	private static CameraPreview mCameraPreview;
-	private static Context c;
+	private static TimeLapseApplication c;
+	private int timelapse_id;
 	
 	// ImageView overlayed on the Camera preview
 	private static ImageView cameraOverlay;
@@ -65,9 +68,8 @@ public class CameraActivity extends Activity {
         setContentView(R.layout.camera);
         
         // Store context for use by static methods
-        c = getApplicationContext();
+        c = (TimeLapseApplication)getApplicationContext();
         
-        // Make cameraOverlay ImageView transparent
         cameraOverlay = (ImageView) findViewById(id.camera_overlay);
         cameraOverlay.setAlpha(100);
 
@@ -124,6 +126,24 @@ public class CameraActivity extends Activity {
     		Log.d("OnResume","mCamera not null");
     	}
     	
+    	Intent intent = getIntent();
+        
+        timelapse_id = intent.getExtras().getInt("timelapse_id");
+        
+        fetchOverlayFromTimeLapse(timelapse_id);
+    	
+    }
+    
+    private void fetchOverlayFromTimeLapse(int timelapse_id){
+    	File timelapse_root = new File(Environment.getExternalStorageDirectory(), FileUtils.MEDIA_DIRECTORY);
+		if(!timelapse_root.isDirectory())
+			return;
+		File timelapse_dir = new File(timelapse_root, String.valueOf(timelapse_id));
+		if(timelapse_dir.exists() && timelapse_dir.isDirectory()){
+			File last_image = new File(timelapse_dir, String.valueOf(c.time_lapse_map.get(timelapse_id).image_count));
+			setCameraOverlay(last_image.getAbsolutePath());
+		}
+        
     }
     
     private OnTouchListener shutterListener = new OnTouchListener(){

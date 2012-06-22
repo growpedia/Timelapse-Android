@@ -1,29 +1,35 @@
 package pro.dbro.timelapse;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
 import android.app.Application;
 
 public class TimeLapseApplication extends Application {
-	
-	public ArrayList<TimeLapse> time_lapses = new ArrayList<TimeLapse>();
-	public int nextTimeLapseId = -1;
+	// id -> TimeLapse
+	public HashMap<Integer,TimeLapse> time_lapse_map = new HashMap<Integer,TimeLapse>();
+	public int nextTimeLapseId = 1;
+
 	
 	public void setTimeLapses(ArrayList<TimeLapse> list){
-		time_lapses = list;
+		// Transfer list items into map
+		for(int x = 0; x < list.size(); x++){
+			time_lapse_map.put(((TimeLapse)list.get(x)).id, list.get(x));
+		}
 		setNextTimeLapseId();
 	}
 	
 	public void createTimeLapse(String title, String description){
-		time_lapses.add(new TimeLapse(title, description, nextTimeLapseId));
+		time_lapse_map.put(nextTimeLapseId, new TimeLapse(title, description, nextTimeLapseId));
 		nextTimeLapseId ++;
-		
 	}
 	
 	private void setNextTimeLapseId(){
-		for(int x = 0; x < time_lapses.size(); x++){
-			if(((TimeLapse)time_lapses.get(x)).id > nextTimeLapseId)
-				nextTimeLapseId = ((TimeLapse)time_lapses.get(x)).id;
+		Object[] keys = (Object[]) time_lapse_map.keySet().toArray();
+		for(int x = 0; x < keys.length; x++){
+			if(((TimeLapse)time_lapse_map.get(Integer.parseInt(keys[x].toString()))).id > nextTimeLapseId)
+				nextTimeLapseId = ((TimeLapse)time_lapse_map.get(Integer.parseInt(keys[x].toString()))).id;
 		}
 		nextTimeLapseId++;
 	}

@@ -41,6 +41,7 @@ public class BrowserActivity extends SherlockListActivity {
       	      new IntentFilter(String.valueOf(R.id.filesystem_parse_complete)));
         
         // Load Timelapses from external storage
+        //Log.d("OnCreate","Beginning filesystem read");
         new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
     }
     
@@ -50,31 +51,14 @@ public class BrowserActivity extends SherlockListActivity {
         if(((String)v.getTag(R.id.view_onclick_action)).equals("camera")){
         	//  launch CameraActivity
         	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
-        	intent.putExtra("timelapse_id", (String)v.getTag(R.id.view_related_timelapse));
+        	intent.putExtra("timelapse_id", (Integer)v.getTag(R.id.view_related_timelapse));
             startActivity(intent);
         }
         else if(((String)v.getTag(R.id.view_onclick_action)).equals("view")){
         	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
-        	intent.putExtra("timelapse_id", (String)v.getTag(R.id.view_related_timelapse));
+        	intent.putExtra("timelapse_id", (Integer)v.getTag(R.id.view_related_timelapse));
             startActivity(intent);
         }
-    }
-    
-    // Create Map describing ListView contents. Fed as "data" to SimpleAdapter constructor
-    private List<Map<String, String>> loadItems(ArrayList<TimeLapse> list){
-    	HashMap<String, String> itemMap = new HashMap<String, String>();
-    	List<Map<String, String>> mapList = new ArrayList<Map<String, String>>();
-    	
-    	// Relate ListView row element identifiers to TimeLapse fields
-    	for(int x = 0; x < list.size();x++){
-    		itemMap.put("title", ((TimeLapse)list.get(x)).name);
-    		itemMap.put("body", ((TimeLapse)list.get(x)).description);
-    		itemMap.put("timelapse", String.valueOf(((TimeLapse)list.get(x)).id));
-    		mapList.add(itemMap);
-    	}
-    	Log.d("maplist_in",list.toString());
-    	Log.d("maplist_out",mapList.toString());
-    	return mapList;
     }
     
     // Populate ActionBar
@@ -102,9 +86,11 @@ public class BrowserActivity extends SherlockListActivity {
     @Override
     protected void onResume(){
     	super.onResume();
-    	Log.d("BrowserActivity","onResume");
-    	TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
-    	populateListView(tla.time_lapses);
+    	
+    	TimeLapseApplication tla = (TimeLapseApplication)getApplicationContext();
+    	ArrayList<TimeLapse> valuesList = new ArrayList<TimeLapse>(tla.time_lapse_map.values());
+    	Log.d("BrowserActivity","onResume. Populating Listview: " + valuesList.toString());
+    	populateListView(valuesList);
     }
     
     @Override
@@ -126,20 +112,37 @@ public class BrowserActivity extends SherlockListActivity {
     	  @Override
     	  public void onReceive(Context context, Intent intent) {
     	    // Populate ListView with received data
-    		Log.d("Broadcast Receiver", "Received filesystem read result");
+    		Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
     		TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
-    		tla.time_lapses = (ArrayList<TimeLapse>) intent.getSerializableExtra("result");
-    	    populateListView(tla.time_lapses);
+    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+    	    populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
     	  }
     };
     
-
     private void populateListView(ArrayList<TimeLapse> data){
     	// Populate ListView
         // (Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to)
         SimpleAdapter browserAdapter = new SimpleAdapter(this.getApplicationContext(), loadItems(data), R.layout.browser_list_item, BROWSER_LIST_ITEM_KEYS, BROWSER_LIST_ITEM_VALUES);
         browserAdapter.setViewBinder(new BrowserViewBinder());
         setListAdapter(browserAdapter);
+    }
+    
+    // Create Map describing ListView contents. Fed as "data" to SimpleAdapter constructor
+    private List<Map<String, String>> loadItems(ArrayList<TimeLapse> list){
+    	
+    	List<Map<String, String>> mapList = new ArrayList<Map<String, String>>();
+    	
+    	// Relate ListView row element identifiers to TimeLapse fields
+    	for(int x = 0; x < list.size();x++){
+    		HashMap<String, String> itemMap = new HashMap<String, String>();
+    		itemMap.put("title", ((TimeLapse)list.get(x)).name);
+    		itemMap.put("body", ((TimeLapse)list.get(x)).description);
+    		itemMap.put("timelapse", String.valueOf(((TimeLapse)list.get(x)).id));
+    		mapList.add(itemMap);
+    	}
+    	Log.d("maplist_in",list.toString());
+    	Log.d("maplist_out",mapList.toString());
+    	return mapList;
     }
 
 }

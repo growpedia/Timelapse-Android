@@ -4,4 +4,5 @@
 <item type="id" name="view_related_timelapse" />
 
 <item type="id" name="filesystem_parse_complete" />
+<item type="id" name="timelapse_to_filesystem_complete" />
 </resources>
