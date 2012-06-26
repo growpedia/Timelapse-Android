@@ -87,10 +87,10 @@ public class BrowserActivity extends SherlockListActivity {
     protected void onResume(){
     	super.onResume();
     	
-    	TimeLapseApplication tla = (TimeLapseApplication)getApplicationContext();
-    	ArrayList<TimeLapse> valuesList = new ArrayList<TimeLapse>(tla.time_lapse_map.values());
-    	Log.d("BrowserActivity","onResume. Populating Listview: " + valuesList.toString());
-    	populateListView(valuesList);
+    	//TimeLapseApplication tla = (TimeLapseApplication)getApplicationContext();
+    	//ArrayList<TimeLapse> valuesList = new ArrayList<TimeLapse>(tla.time_lapse_map.values());
+    	//Log.d("BrowserActivity","onResume. Populating Listview: " + valuesList.toString());
+    	//populateListView(valuesList);
     }
     
     @Override

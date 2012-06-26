@@ -93,6 +93,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
         }
     }
     
+    // Create a new timelapse
     private OnClickListener createTimeLapseListener = new OnClickListener(){
 
 		@Override
