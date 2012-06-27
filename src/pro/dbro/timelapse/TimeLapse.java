@@ -3,6 +3,7 @@ package pro.dbro.timelapse;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 
 import com.google.gson.ExclusionStrategy;
@@ -37,6 +38,15 @@ public class TimeLapse implements Serializable{
 		new FileUtils.CreateTimeLapsesOnFilesystem().execute(this);
 	}
 	
+	// Set title and description, and change representation on filesystem
+	public void setTitleAndDescription(String title, String description){
+		this.name = title;
+		this.description = description;
+		
+		// update the TimeLapse's representation on external storage
+		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this);
+	}
+	
 	 // Excludes any field from JSON serializer that is tagged with an "@NotForExport"
 	 public static class JsonExclusionStrategy implements ExclusionStrategy {
 		 public boolean shouldSkipClass(Class<?> clazz) {
@@ -47,5 +57,12 @@ public class TimeLapse implements Serializable{
 		     return f.getAnnotation(NotForExport.class) != null;
 		 }
 	 }
+	 
+	 // Determines how Lists of TimeLapse objects are sorted
+	 public static class TimeLapseComparator implements Comparator<TimeLapse> {
+		    public int compare(TimeLapse object1, TimeLapse object2) {
+		        return object1.modified_date.compareTo(object2.modified_date);
+		    }
+		}
 
 }

@@ -22,7 +22,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 	private TimeLapseApplication tla;
 	private EditText title;
 	private EditText description;
-	private Button createButton;
+	private Button actionButton;
 	
 	private int timelapse_id = -1;
 
@@ -37,7 +37,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
         
         title = (EditText) findViewById(R.id.create_timelapse_title);
         description = (EditText) findViewById(R.id.create_timelapse_description);
-        createButton =  (Button) findViewById(R.id.create_timelapse_button);
+        actionButton =  (Button) findViewById(R.id.create_timelapse_button);
         
         tla = (TimeLapseApplication)getApplicationContext();
         
@@ -47,13 +47,16 @@ public class TimeLapseViewerActivity extends SherlockActivity {
         Log.d("TimeLapseViewerActivity", "TL id : " + String.valueOf(timelapse_id));
         if(timelapse_id == -1){
         	// new timelapse
-        	createButton.setVisibility(View.VISIBLE);
-        	createButton.setOnClickListener(createTimeLapseListener);
+        	actionButton.setVisibility(View.VISIBLE);
+        	actionButton.setOnClickListener(createTimeLapseListener);
         }
         else{
         	if(tla.time_lapse_map.containsKey(timelapse_id)){
         		title.setText(((TimeLapse)tla.time_lapse_map.get(timelapse_id)).name);
             	description.setText(((TimeLapse)tla.time_lapse_map.get(timelapse_id)).description);
+            	actionButton.setText(getString(R.string.save_timelapse_button));
+            	actionButton.setVisibility(View.VISIBLE);
+            	actionButton.setOnClickListener(saveTimeLapseListener);
         	}
         }
     }
@@ -63,11 +66,6 @@ public class TimeLapseViewerActivity extends SherlockActivity {
     	super.onPause();
     	// Save title / description
     	Log.d("TimeLapseViewer onPause","TL id: " + timelapse_id);
-    	if(tla.time_lapse_map.containsKey(timelapse_id)){
-    		Log.d("TimeLapseViewer OnPause","saving..");
-    		((TimeLapse)tla.time_lapse_map.get(timelapse_id)).name = title.getText().toString();
-    		((TimeLapse)tla.time_lapse_map.get(timelapse_id)).description = description.getText().toString();
-    	}
     	
     }
     
@@ -93,6 +91,31 @@ public class TimeLapseViewerActivity extends SherlockActivity {
         }
     }
     
+    
+    // Save changes to current timelapse
+    private OnClickListener saveTimeLapseListener = new OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+			if(title.getText().toString().compareTo("") == 0){
+				return;
+			}
+			else{
+				if(tla.time_lapse_map.containsKey(timelapse_id)){
+		    		tla.setTimeLapseTitleAndDescription(timelapse_id, title.getText().toString(), description.getText().toString());
+		    		//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
+					Log.d("TimeLapse Modified",title.getText().toString() + " " + description.getText().toString());
+					Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
+					// Signal BrowserActivity to update ListView
+					intent.putExtra("updateListView", true);
+	                startActivity(intent);
+		    	}
+			}
+			
+		}
+    	
+    };
+    
     // Create a new timelapse
     private OnClickListener createTimeLapseListener = new OnClickListener(){
 
@@ -106,6 +129,8 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 				//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
 				Log.d("TimeLapse Created",title.getText().toString() + " " + description.getText().toString());
 				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
+				// Signal BrowserActivity to update ListView
+				intent.putExtra("updateListView", true);
                 startActivity(intent);
 			}
 			

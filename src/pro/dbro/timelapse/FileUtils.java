@@ -90,8 +90,20 @@ public class FileUtils {
 			//File dir = new File(filePath[0]);
 			File dir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
 			Log.d(TAG, "reading filesystem. Root: " + dir.getAbsolutePath());
-			if(!dir.isDirectory())
+			// A file exists in place of the requested root TimeLapse directory
+			// TODO: Prompt user for action
+			if(dir.exists() && !dir.isDirectory()){
+				Log.d(TAG,"Filename collision with TimeLapse directory");
 				return result;
+			}
+			else if(!dir.exists()){
+				// The TimeLapse root directory didn't exist
+				Log.d(TAG,"Creating TimeLapse directory");
+				dir.mkdir();
+				return result;
+			}
+			else
+				Log.d(TAG,"TimeLapse directory found!");
 			
 			TimeLapse temp;
 			for (File child : dir.listFiles()) {
@@ -189,6 +201,53 @@ public class FileUtils {
 			
 			try {
 				FileWriter writer = new FileWriter(timelapse_meta);
+				writer.write(gson.toJson(input[0]));
+				writer.flush();
+		        writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				Log.d("CreateTimeLapseOnFileSystem", "writing failed:");
+			}
+			return true;
+		}
+		
+		@Override
+	    protected void onPostExecute(Boolean result) {
+			// Don't need to send a message indicating this is complete
+			//sendMessage(result);
+	        super.onPostExecute(result);
+	    }
+		
+		private void sendMessage(Boolean result) {
+		  	  Intent intent = new Intent(String.valueOf(R.id.timelapse_to_filesystem_complete));
+		  	  intent.putExtra("result", result);
+		  	  LocalBroadcastManager.getInstance(BrowserActivity.c).sendBroadcast(intent);
+		}
+		
+	}
+	
+	// Given a TimeLapse object, save it's representation onn the filesystem
+	// Returns True if successful, False otherwise
+	public static class SaveTimeLapsesOnFilesystem extends AsyncTask<TimeLapse, Void, Boolean>{
+	
+		// This method is executed in a separate thread
+		@Override
+		protected Boolean doInBackground(TimeLapse... input) {
+			
+			File timelapse_root = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+			if(!timelapse_root.isDirectory())
+				return false;
+			File timelapse_dir = new File(timelapse_root, String.valueOf(((TimeLapse)input[0]).id));
+			if(!timelapse_dir.exists())
+				return false;
+			
+			File timelapse_meta = new File(timelapse_dir, METADATA_FILENAME);
+			Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(new TimeLapse.JsonExclusionStrategy()).create();
+			
+			try {
+				// Overwrite the metadata.json file
+				FileWriter writer = new FileWriter(timelapse_meta, false);
 				writer.write(gson.toJson(input[0]));
 				writer.flush();
 		        writer.close();

@@ -31,14 +31,14 @@ public class ListItemRelativeLayout extends RelativeLayout {
 				// 0 : timelapse id corresponding to this view
 				// 1 : "camera" or "view", indicating the behavior for ListView item select
 				
-				Log.d("ListItemRelativeLayout",this.getTag(R.id.view_related_timelapse).toString());
+				//Log.d("ListItemRelativeLayout",this.getTag(R.id.view_related_timelapse).toString());
 				// If the touch occurs in the area of the camera icon, go to picture
 				if(isPointInsideView(me.getRawX(), me.getRawY(), this.findViewById(R.id.list_item_camera))){
-					Log.d("ListItemRelativeLayout","camera");
+					//Log.d("ListItemRelativeLayout","camera");
 					this.setTag(R.id.view_onclick_action,"camera");
 				}
 				else{
-					Log.d("ListItemRelativeLayout","view");
+					//Log.d("ListItemRelativeLayout","view");
 					this.setTag(R.id.view_onclick_action,"view");
 				}
 			}
