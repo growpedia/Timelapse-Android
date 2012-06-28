@@ -16,32 +16,20 @@ public class CameraUtils {
 	// TAG to associate with all debug logs originating from this class
 	private static final String TAG = "CameraUtils";
 	
-	// Called by Camera when a picture's data is ready for processing
-	// Restart Camera preview after snapping, and set just-captured photo as overlay
-	public static PictureCallback mSavePicture = new PictureCallback() {
-
-	    @Override
-	    public void onPictureTaken(byte[] data, Camera camera) {
-	        File pictureFile = FileUtils.getOutputMediaFile(FileUtils.MEDIA_TYPE_IMAGE);
-	        if (pictureFile == null){
-	            Log.d(TAG, "Error creating media file, check storage permissions");
-	            return;
-	        }
-
-	        try {
-	            FileOutputStream fos = new FileOutputStream(pictureFile);
-	            fos.write(data);
-	            fos.close();
-	        } catch (FileNotFoundException e) {
-	            Log.d(TAG, "File not found: " + e.getMessage());
-	        } catch (IOException e) {
-	            Log.d(TAG, "Error accessing file: " + e.getMessage());
-	        }
-	        Log.d(TAG,"Picture saved: " + pictureFile.getAbsolutePath());
-	        CameraActivity.setCameraOverlay(pictureFile.getAbsolutePath());
-	        
-	    }
-	};
+	// takes TimeLapse id argument to allow direct writing of picture to proper directory
+	public static class TimeLapsePictureCallback implements PictureCallback{
+		private int timelapse_id = -1;
+		
+		public TimeLapsePictureCallback(int timelapse_id){
+			this.timelapse_id = timelapse_id;
+		}
+		
+		@Override
+		public void onPictureTaken(byte[] data, Camera camera) {
+			new FileUtils.SavePictureOnFilesystem(timelapse_id).execute(data);
+			
+		}
+	}
 	
 	// Called by Camera on shutter action, but before picture's data is ready
 	public static ShutterCallback mShutterFeedback = new ShutterCallback(){

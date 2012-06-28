@@ -32,7 +32,7 @@ public class BrowserActivity extends SherlockListActivity {
 	// The adapter which connects the application data to the ListView
 	SimpleAdapter browserAdapter;
 	
-	public static Context c;
+	public static TimeLapseApplication c;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -40,7 +40,7 @@ public class BrowserActivity extends SherlockListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.browser);
         
-        c = this;
+        c = (TimeLapseApplication)getApplicationContext();
 
         // Establish LocalBroadcastManager for communication with other Classes
         LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
@@ -49,6 +49,10 @@ public class BrowserActivity extends SherlockListActivity {
         // Load Timelapses from external storage
         Log.d("OnCreate","Beginning filesystem read");
         new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+    }
+    
+    public static TimeLapseApplication getContext() {
+        return c;
     }
     
     // Handle listview item select

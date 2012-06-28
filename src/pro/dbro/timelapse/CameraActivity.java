@@ -1,27 +1,8 @@
-/** TimeLapse: A timelapse tool for Android
- *  
- *  TimeLapseActivity 
- *  -- The application view controller. It safely obtains, manages, and releases
- *  an instance of the system Camera. 
- *  + Preview imagery is displayed via CameraPreview, which is passed the instance of the system Camera
- *  + The shutter listener (shutterListener() ) is attached to the root RelativeLayout described in main.xml 
- *  + Shutter feedback via showShutterFeedback()
- *  + Overlay the previously taken photo on the live camera preview via setCameraOverlay()
- * 
- *  CameraPreview
- *  -- The view displaying live camera data. Passed system Camera instance.
- *  
- *  CameraUtils
- *  -- Camera callback methods which reference TimeLapseActivity methods (i.e: Camera shutter callback - > TimeLapseActivity.showShutterFeedback())
- *  
- *  FileUtils
- *  -- Generic photo/video writing to sdcard
- *  
- */
-
 package pro.dbro.timelapse;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import pro.dbro.timelapse.R.id;
@@ -35,6 +16,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -153,7 +135,11 @@ public class CameraActivity extends Activity {
 			if ( (event.getAction()) == event.ACTION_DOWN ) {
 				Log.d(TAG,"Taking picture...");
 				// takePicture must be called after mCamera.startPreview()
-				mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, CameraUtils.mSavePicture);
+				
+				// Called by Camera when a picture's data is ready for processing
+				// Restart Camera preview after snapping, and set just-captured photo as overlay
+				//TimeLapsePictureCallback tlpc = CameraUtils.TimeLapsePictureCallback(timelapse_id);
+				mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(timelapse_id));
 				// Consume touch event
 				return true;
             }

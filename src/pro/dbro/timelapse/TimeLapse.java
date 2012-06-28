@@ -35,7 +35,7 @@ public class TimeLapse implements Serializable{
 		this.creation_date = new Date();
 		
 		// Create the filesystem representation of this TimeLapse in another thread
-		new FileUtils.CreateTimeLapsesOnFilesystem().execute(this);
+		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this);
 	}
 	
 	// Set title and description, and change representation on filesystem

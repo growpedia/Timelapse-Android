@@ -84,6 +84,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private void tryAutoFocus(){
     	if(mCamera.getParameters().getFocusMode().compareTo("FOCUS_MODE_AUTO") == 0 ||  
     			mCamera.getParameters().getFocusMode().compareTo("FOCUS_MODE_MACRO") == 0){
+    		Log.d(TAG,"Setting autofocus");
     		mCamera.autoFocus(null);
     	}
     }

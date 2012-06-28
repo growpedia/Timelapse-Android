@@ -38,18 +38,39 @@ public class FileUtils {
 	private static final String TAG = "FileUtils";
 
 	/** Create a file Uri for saving an image or video */
-	public static Uri getOutputMediaFileUri(int type){
-	      return Uri.fromFile(getOutputMediaFile(type));
+	public static Uri getOutputMediaFileUri(int timelapse_id, int type){
+	      return Uri.fromFile(getOutputMediaFile(timelapse_id, type));
 	}
-
-	/** Create a File for saving an image or video */
-	public static File getOutputMediaFile(int type){
+	
+	public static File getOutputMediaDir(int timelapse_id){
 	    // To be safe, you should check that the SDCard is mounted
 	    // using Environment.getExternalStorageState() before doing this.
 
+		// /mnt/sdcard/TimeLapse
 	    File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
-	    // This location works best if you want the created images to be shared
-	    // between applications and persist after your app has been uninstalled.
+	    // /mnt/sdcard/TimeLapse/x
+	    mediaStorageDir = new File(mediaStorageDir, String.valueOf(timelapse_id));
+
+	    // Create the storage directory if it does not exist
+	    if (! mediaStorageDir.exists()){
+	        if (! mediaStorageDir.mkdirs()){
+	            Log.d(TAG, "failed to create directory");
+	            return null;
+	        }
+	    }
+	    return mediaStorageDir;
+	}
+
+	/** Create a File for saving an image or video 
+	 *  Assumes timelapse_id is validated	*/
+	public static File getOutputMediaFile(int timelapse_id, int type){
+	    // To be safe, you should check that the SDCard is mounted
+	    // using Environment.getExternalStorageState() before doing this.
+
+		// /mnt/sdcard/TimeLapse
+	    File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+	    // /mnt/sdcard/TimeLapse/x
+	    mediaStorageDir = new File(mediaStorageDir, String.valueOf(timelapse_id));
 
 	    // Create the storage directory if it does not exist
 	    if (! mediaStorageDir.exists()){
@@ -60,14 +81,20 @@ public class FileUtils {
 	    }
 
 	    // Create a media file name
-	    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+	    //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+	    // get tla.timelapse_map(timelapse_id).image_count + 1
+	    
+	    // Get next image name from TimeLapse.image_count, and increment image_count
+	    TimeLapseApplication tla = BrowserActivity.getContext();
+	    int int_image = ((TimeLapse)tla.time_lapse_map.get(timelapse_id)).image_count + 1;
+	    
 	    File mediaFile;
 	    if (type == MEDIA_TYPE_IMAGE){
-	        mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-	        "IMG_"+ timeStamp + ".jpeg");
+	        mediaFile = new File(mediaStorageDir.getPath() + File.separator + 
+	        String.valueOf(int_image) + ".jpeg");
 	    } else if(type == MEDIA_TYPE_VIDEO) {
 	        mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-	        "VID_"+ timeStamp + ".mp4");
+	        String.valueOf(int_image) + ".mp4");
 	    } else {
 	        return null;
 	    }
@@ -181,66 +208,22 @@ public class FileUtils {
 		
 	}
 	
-	// Given a TimeLapse object, create it's representation in the filesystem
-	// Returns True if successful, False otherwise
-	public static class CreateTimeLapsesOnFilesystem extends AsyncTask<TimeLapse, Void, Boolean>{
-
-		// This method is executed in a separate thread
-		@Override
-		protected Boolean doInBackground(TimeLapse... input) {
-			
-			File timelapse_root = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
-			if(!timelapse_root.isDirectory())
-				return false;
-			File timelapse_dir = new File(timelapse_root, String.valueOf(((TimeLapse)input[0]).id));
-			// TODO: resolve how to handle a dir all ready existing
-			if(timelapse_dir.exists() || timelapse_dir.mkdir() == false)
-				return false;
-			File timelapse_meta = new File(timelapse_dir, METADATA_FILENAME);
-			Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(new TimeLapse.JsonExclusionStrategy()).create();
-			
-			try {
-				FileWriter writer = new FileWriter(timelapse_meta);
-				writer.write(gson.toJson(input[0]));
-				writer.flush();
-		        writer.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				Log.d("CreateTimeLapseOnFileSystem", "writing failed:");
-			}
-			return true;
-		}
-		
-		@Override
-	    protected void onPostExecute(Boolean result) {
-			// Don't need to send a message indicating this is complete
-			//sendMessage(result);
-	        super.onPostExecute(result);
-	    }
-		
-		private void sendMessage(Boolean result) {
-		  	  Intent intent = new Intent(String.valueOf(R.id.timelapse_to_filesystem_complete));
-		  	  intent.putExtra("result", result);
-		  	  LocalBroadcastManager.getInstance(BrowserActivity.c).sendBroadcast(intent);
-		}
-		
-	}
-	
-	// Given a TimeLapse object, save it's representation onn the filesystem
+	// Given a TimeLapse object, save it's representation on the filesystem
 	// Returns True if successful, False otherwise
 	public static class SaveTimeLapsesOnFilesystem extends AsyncTask<TimeLapse, Void, Boolean>{
 	
 		// This method is executed in a separate thread
 		@Override
 		protected Boolean doInBackground(TimeLapse... input) {
-			
+			/*
 			File timelapse_root = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
 			if(!timelapse_root.isDirectory())
 				return false;
 			File timelapse_dir = new File(timelapse_root, String.valueOf(((TimeLapse)input[0]).id));
 			if(!timelapse_dir.exists())
 				return false;
+				*/
+			File timelapse_dir = getOutputMediaDir(input[0].id);
 			
 			File timelapse_meta = new File(timelapse_dir, METADATA_FILENAME);
 			Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(new TimeLapse.JsonExclusionStrategy()).create();
@@ -273,6 +256,68 @@ public class FileUtils {
 		}
 		
 	}
+	
+		// Save a picture (given as byte[]) to the filesystem
+		public static class SavePictureOnFilesystem extends AsyncTask<byte[], Void, String>{
+			
+			int timelapse_id = -1;
+		
+			public SavePictureOnFilesystem(int timelapse_id){
+				super();
+				this.timelapse_id = timelapse_id;
+				
+			}
+			// This method is executed in a separate thread
+			@Override
+			protected String doInBackground(byte[]... input) {
+				if(timelapse_id == -1){
+					Log.d(TAG,"Error: no timelapse_id given");
+					return "";
+				}
+				File pictureFile = FileUtils.getOutputMediaFile(timelapse_id, FileUtils.MEDIA_TYPE_IMAGE);
+		        if (pictureFile == null){
+		            Log.d(TAG, "Error creating media file, check storage permissions");
+		            return "";
+		        }
+
+		        try {
+		            FileOutputStream fos = new FileOutputStream(pictureFile);
+		            fos.write(input[0]);
+		            fos.close();
+		        } catch (FileNotFoundException e) {
+		            Log.d(TAG, "File not found: " + e.getMessage());
+		        } catch (IOException e) {
+		            Log.d(TAG, "Error accessing file: " + e.getMessage());
+		        }
+		        Log.d(TAG,"Picture saved: " + pictureFile.getAbsolutePath());
+		        
+		        // Picture is now written to Filesystem
+		        // set TimeLapse image_count and modified_date
+		        TimeLapseApplication tla = BrowserActivity.getContext();
+		        TimeLapse tl = ((TimeLapseApplication)tla).time_lapse_map.get(timelapse_id);
+		        tl.modified_date = new Date();
+		        tl.image_count ++;
+				
+		        // Save the new metadata.json reflecting the recently taken picture
+		        new FileUtils.SaveTimeLapsesOnFilesystem().execute(tl);
+				return pictureFile.getAbsolutePath();
+			}
+			
+			@Override
+		    protected void onPostExecute(String result) {
+				// Don't need to send a message indicating this is complete
+				//sendMessage(result);
+				super.onPostExecute(result);
+				CameraActivity.setCameraOverlay(result);
+		    }
+			
+			private void sendMessage(Boolean result) {
+			  	  Intent intent = new Intent(String.valueOf(R.id.timelapse_to_filesystem_complete));
+			  	  intent.putExtra("result", result);
+			  	  LocalBroadcastManager.getInstance(BrowserActivity.c).sendBroadcast(intent);
+			}
+			
+		}
 	
 	// Efficiently convert a File object to a String
 	public static String fileToString(File file) throws IOException{
