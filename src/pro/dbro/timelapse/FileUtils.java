@@ -18,6 +18,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -151,9 +154,8 @@ public class FileUtils {
 						// manually assign other attributes
 						
 						// count images in directory
-						if (child.listFiles(new imageFilter()) != null){
-							File[] children = child.listFiles(new imageFilter());
-							temp.image_count = child.listFiles(new imageFilter()).length;
+						if (child.listFiles(FileUtils.mImageFilter) != null && child.listFiles(FileUtils.mImageFilter).length != 0){
+							findOrGenerateThumbnail(temp);	
 						}
 						else
 							temp.image_count = 0;
@@ -185,36 +187,22 @@ public class FileUtils {
 	    }
 		
 		private void sendMessage(ArrayList<TimeLapse> result) {
-		  	  Intent intent = new Intent(String.valueOf(R.id.filesystem_parse_complete));
+		  	  Intent intent = new Intent(String.valueOf(R.id.browserActivity_message));
 		  	  intent.putExtra("result", result);
+		  	  intent.putExtra("type", R.id.filesystem_parse_complete);
 		  	  LocalBroadcastManager.getInstance(BrowserActivity.c).sendBroadcast(intent);
 		}
-		// Check that file has extension = ".jpeg"
-		public class imageFilter implements FileFilter{
-
-			@Override
-			public boolean accept(File pathname) {
-				String[] pathArray = pathname.getPath().split(pathname.separator);
-				String extension = pathArray[pathArray.length-1].split("\\.")[1];
-				if (extension.compareTo("jpeg") == 0){
-					return true;
-				}
-				else{
-					return false;
-				}
-			}
-			
-		}
+		
 		
 	}
 	
 	// Given a TimeLapse object, save it's representation on the filesystem
 	// Returns True if successful, False otherwise
-	public static class SaveTimeLapsesOnFilesystem extends AsyncTask<TimeLapse, Void, Boolean>{
+	public static class SaveTimeLapsesOnFilesystem extends AsyncTask<TimeLapse, Void, Integer>{
 	
 		// This method is executed in a separate thread
 		@Override
-		protected Boolean doInBackground(TimeLapse... input) {
+		protected Integer doInBackground(TimeLapse... input) {
 			/*
 			File timelapse_root = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
 			if(!timelapse_root.isDirectory())
@@ -239,19 +227,21 @@ public class FileUtils {
 				e.printStackTrace();
 				Log.d("CreateTimeLapseOnFileSystem", "writing failed:");
 			}
-			return true;
+			return input[0].id;
 		}
 		
 		@Override
-	    protected void onPostExecute(Boolean result) {
+	    protected void onPostExecute(Integer result) {
 			// Don't need to send a message indicating this is complete
-			//sendMessage(result);
+			sendMessage(result);
 	        super.onPostExecute(result);
 	    }
 		
-		private void sendMessage(Boolean result) {
-		  	  Intent intent = new Intent(String.valueOf(R.id.timelapse_to_filesystem_complete));
-		  	  intent.putExtra("result", result);
+		private void sendMessage(Integer result) {
+		  	  Intent intent = new Intent(String.valueOf(R.id.browserActivity_message));
+		  	  intent.putExtra("timelapse_id", result);
+		  	  intent.putExtra("type", R.id.filesystem_modified);
+		  	  // TODO: Only update the part of the ListView that is necessary
 		  	  LocalBroadcastManager.getInstance(BrowserActivity.c).sendBroadcast(intent);
 		}
 		
@@ -297,6 +287,9 @@ public class FileUtils {
 		        TimeLapse tl = ((TimeLapseApplication)tla).time_lapse_map.get(timelapse_id);
 		        tl.modified_date = new Date();
 		        tl.image_count ++;
+		        
+		        // Generate a thumbnail for this new picture
+		        findOrGenerateThumbnail(tl);
 				
 		        // Save the new metadata.json reflecting the recently taken picture
 		        new FileUtils.SaveTimeLapsesOnFilesystem().execute(tl);
@@ -310,12 +303,6 @@ public class FileUtils {
 				super.onPostExecute(result);
 				CameraActivity.setCameraOverlay(result);
 		    }
-			
-			private void sendMessage(Boolean result) {
-			  	  Intent intent = new Intent(String.valueOf(R.id.timelapse_to_filesystem_complete));
-			  	  intent.putExtra("result", result);
-			  	  LocalBroadcastManager.getInstance(BrowserActivity.c).sendBroadcast(intent);
-			}
 			
 		}
 	
@@ -331,6 +318,117 @@ public class FileUtils {
 		
 		return file_content.toString();
 	}
+	
+	/** Image Utilities **/
+	
+	// Calculate Image sample size given target width, height
+	public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    // Raw height and width of image
+    final int height = options.outHeight;
+    final int width = options.outWidth;
+    int inSampleSize = 1;
+
+    if (height > reqHeight || width > reqWidth) {
+        if (width > height) {
+            inSampleSize = Math.round((float)height / (float)reqHeight);
+        } else {
+            inSampleSize = Math.round((float)width / (float)reqWidth);
+        }
+    }
+    return inSampleSize;
+	}
+	
+	// Given filepath, and required display height, width, loads scaled bitmap without occupying memory == original filesize
+	public static Bitmap decodeSampledBitmapFromResource(String path,
+	        int reqWidth, int reqHeight) {
+
+	    // First decode with inJustDecodeBounds=true to check dimensions
+	    final BitmapFactory.Options options = new BitmapFactory.Options();
+	    options.inJustDecodeBounds = true;
+	    //BitmapFactory.decodeResource(res, resId, options);
+	    BitmapFactory.decodeFile(path, options); 
+
+	    // Calculate inSampleSize
+	    options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+	    // Decode bitmap with inSampleSize set
+	    options.inJustDecodeBounds = false;
+	    //return BitmapFactory.decodeResource(res, resId, options);
+	    return BitmapFactory.decodeFile(path, options);
+	}
+	
+	// Generate a thumbnail given an original, and set TimeLapse.thumbnail_path
+	// if thumbnail matching last image in TimeLapse exists, set TimeLapse.thumbnail_path 
+	public static void findOrGenerateThumbnail(TimeLapse timelapse){
+		
+		File timelapse_dir = new File(timelapse.directory_path);
+		
+		// if the timelapse dir does not exist or is a file,
+		// fixing the application state is beyond the scope of this method
+		// TODO: for performance, remove this check 
+		if(!timelapse_dir.exists() || timelapse_dir.isFile())
+			return;
+		
+		// Make thumbnail folder if it doesn't exist
+		File thumbnail_dir = new File(timelapse_dir, TimeLapse.thumbnail_dir);
+	    if (! thumbnail_dir.exists()){
+	        if (! thumbnail_dir.mkdirs()){
+	            Log.d(TAG, "failed to create thumbnail directory");
+	            return;
+	        }
+	    }
+	    // Determine last image in TimeLapse dir and generate thumbnail if it doesn't exist
+		File[] children = timelapse_dir.listFiles(new imageFilter());
+		timelapse.image_count = timelapse_dir.listFiles(new imageFilter()).length;
+		// Generate thumbnail of last image and save to storage as "./thumbnail_dir/XXXthumbnail_suffix.jpeg"
+		File original = new File(timelapse_dir,String.valueOf(timelapse.image_count)+".jpeg");
+		timelapse.last_image_path = original.getAbsolutePath();
+		Bitmap thumbnail_bitmap = FileUtils.decodeSampledBitmapFromResource(original.getAbsolutePath(), TimeLapse.thumbnail_width, TimeLapse.thumbnail_height);
+		File thumbnail_file = new File(thumbnail_dir, String.valueOf(timelapse.image_count)+ TimeLapse.thumbnail_suffix +".jpeg");
+		if(!thumbnail_file.exists()){
+			FileOutputStream out;
+			try {
+				out = new FileOutputStream(thumbnail_file);
+				thumbnail_bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+				timelapse.thumbnail_path = thumbnail_file.getAbsolutePath();
+			} catch (FileNotFoundException e) {
+				// Not sure when this would happen...
+				// FileOutputStream creates file if it doesn't exist (the intended case)
+				// Maybe on permission denied...
+				e.printStackTrace();
+			}
+		}
+		else{
+			//if thumbail exists, store it with TimeLapse
+			timelapse.thumbnail_path = thumbnail_file.getAbsolutePath();
+		}
+	}
+	
+	// Check that file has extension = ".jpeg"
+	public static class imageFilter implements FileFilter{
+
+		@Override
+		public boolean accept(File pathname) {
+			String[] pathArray = pathname.getPath().split(pathname.separator);
+			Log.d("ImageFilter", pathArray.toString());
+			String[] extensionArray = pathArray[pathArray.length-1].split("\\.");
+			// if the pathname represents a directory, it won't have extension
+			if (extensionArray.length == 1)
+				return false;
+			String extension = extensionArray[1];
+			
+			if (extension.compareTo("jpeg") == 0){
+				
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+	}
+	
+	public static imageFilter mImageFilter = new imageFilter();
 
 
 }

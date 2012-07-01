@@ -1,6 +1,7 @@
 /** Represent a TimeLapse */
 package pro.dbro.timelapse;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,9 +19,21 @@ public class TimeLapse implements Serializable{
 	public int image_count = 0;
 	
 	@NotForExport
-	public String directory_path;
+	public String directory_path;	// absolute directory path
 	@NotForExport
-	public int id; // the directory name
+	public int id; 					// directory name
+	@NotForExport
+	public static String last_image_path;	// path to last image. Set by FileUtils.findOrGenerateThumbnail. Used by CameraActivity for overlay
+	@NotForExport
+	public static String thumbnail_path;	// path to current thumbnail. Set by FileUtils.findOrGenerateThumbnail
+	@NotForExport
+	public static final String thumbnail_dir = "thumbnails";
+	@NotForExport
+	public static final String thumbnail_suffix = "_thumb";
+	@NotForExport
+	public static int thumbnail_height = 100;	// pixels
+	@NotForExport
+	public static int thumbnail_width = 100;	// pixels
 	
 	// List of filename Strings within directoryPath
 	@NotForExport
@@ -37,6 +50,17 @@ public class TimeLapse implements Serializable{
 		// Create the filesystem representation of this TimeLapse in another thread
 		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this);
 	}
+	/* Deprecated: FileUtils.generateThumbnail sets field on successful thumbnail generation
+	public String getThumbnailPath(){
+
+		if(image_count != 0){
+			if(directory_path != null){
+				return directory_path + File.separator + thumbnail_dir + File.separator + String.valueOf(image_count)+".jpeg";
+			}
+		}
+		return "";
+	}
+	*/
 	
 	// Set title and description, and change representation on filesystem
 	public void setTitleAndDescription(String title, String description){

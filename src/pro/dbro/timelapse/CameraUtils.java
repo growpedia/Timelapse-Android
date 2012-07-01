@@ -26,6 +26,7 @@ public class CameraUtils {
 		
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
+			CameraActivity.picture_taken = true;
 			new FileUtils.SavePictureOnFilesystem(timelapse_id).execute(data);
 			
 		}

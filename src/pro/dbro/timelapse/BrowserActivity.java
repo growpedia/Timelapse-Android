@@ -1,5 +1,6 @@
 package pro.dbro.timelapse;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,19 +16,24 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
 public class BrowserActivity extends SherlockListActivity {
 	
 	// These parallel arrays map plain-text timelapse properties to view resource IDs within a ListView item
-	private static final String[] BROWSER_LIST_ITEM_KEYS = {"title", "body", "timelapse"};
-	private static final int[] BROWSER_LIST_ITEM_VALUES = {R.id.list_item_headline, R.id.list_item_body, R.id.list_item_container};
+	private static final String[] BROWSER_LIST_ITEM_KEYS = {"title", "body", "timelapse", "thumbnail"};
+	private static final int[] BROWSER_LIST_ITEM_VALUES = {R.id.list_item_headline, R.id.list_item_body, R.id.list_item_container, R.id.list_item_image};
 	
 	// The adapter which connects the application data to the ListView
 	SimpleAdapter browserAdapter;
@@ -44,7 +50,7 @@ public class BrowserActivity extends SherlockListActivity {
 
         // Establish LocalBroadcastManager for communication with other Classes
         LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
-      	      new IntentFilter(String.valueOf(R.id.filesystem_parse_complete)));
+      	      new IntentFilter(String.valueOf(R.id.browserActivity_message)));
         
         // Load Timelapses from external storage
         Log.d("OnCreate","Beginning filesystem read");
@@ -103,6 +109,8 @@ public class BrowserActivity extends SherlockListActivity {
     	//populateListView(valuesList);
     }
     
+    // TimeLapseViewerActivity starts this activity with a bundled intent message to update view
+    // Deprecated: FileUtils.SaveTimeLapseOnFilesystem will signal re-draw
     @Override
     protected void onNewIntent (Intent intent){
     	Log.d("onNewIntent","called");
@@ -133,10 +141,32 @@ public class BrowserActivity extends SherlockListActivity {
     	  @Override
     	  public void onReceive(Context context, Intent intent) {
     	    // Populate ListView with received data
-    		Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
-    		TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
-    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
-    	    populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+    		  int type = intent.getIntExtra("type", -1);
+    		if(type != -1){
+    			if(type == R.id.filesystem_parse_complete){
+		    		Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
+		    		TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
+		    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+		    	    populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+    			}
+    			else if(type == R.id.filesystem_modified){
+    				Log.d("BroadcastReceiver","Smart ListView refresh");
+    				int timelapse_id = intent.getIntExtra("timelapse_id", -1);
+    				if (timelapse_id == -1)
+    					return;
+    				TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
+    				TimeLapse timelapse = tla.time_lapse_map.get(timelapse_id);
+    				
+    				int view_id = Integer.parseInt(String.valueOf(timelapse_id));
+    				RelativeLayout browser_list_item = ((RelativeLayout) findViewById(view_id));
+    				((TextView)browser_list_item.findViewById(R.id.list_item_headline)).setText(timelapse.name);
+    				((TextView)browser_list_item.findViewById(R.id.list_item_body)).setText(timelapse.description);
+    				if(timelapse.image_count != 0){
+	    				Bitmap thumb_bitmap = BitmapFactory.decodeFile(timelapse.thumbnail_path);
+	    	    	    ((ImageView)browser_list_item.findViewById(R.id.list_item_image)).setImageBitmap(thumb_bitmap);
+    				}
+    			}
+    		}
     	  }
     };
     
@@ -157,9 +187,15 @@ public class BrowserActivity extends SherlockListActivity {
     	// Relate ListView row element identifiers to TimeLapse fields
     	for(int x = 0; x < list.size();x++){
     		HashMap<String, String> itemMap = new HashMap<String, String>();
-    		itemMap.put("title", ((TimeLapse)list.get(x)).name);
-    		itemMap.put("body", ((TimeLapse)list.get(x)).description);
-    		itemMap.put("timelapse", String.valueOf(((TimeLapse)list.get(x)).id));
+    		itemMap.put("title", list.get(x).name);
+    		itemMap.put("body", list.get(x).description);
+    		itemMap.put("timelapse", String.valueOf(list.get(x).id));
+    		if(list.get(x).image_count > 0){
+    			File thumb_dir = new File(FileUtils.getOutputMediaDir(list.get(x).id), "thumbnails");
+    			File thumb_image = new File(thumb_dir, String.valueOf(list.get(x).image_count)+"_thumb.jpeg");
+    			if(thumb_image.exists())
+    				itemMap.put("thumbnail", thumb_image.getAbsolutePath());
+    		}
     		mapList.add(itemMap);
     	}
     	Log.d("maplist_in",list.toString());

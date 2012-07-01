@@ -107,7 +107,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 					Log.d("TimeLapse Modified",title.getText().toString() + " " + description.getText().toString());
 					Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
 					// Signal BrowserActivity to update ListView
-					intent.putExtra("updateListView", true);
+					//intent.putExtra("updateListView", true);
 	                startActivity(intent);
 		    	}
 			}
@@ -130,7 +130,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 				Log.d("TimeLapse Created",title.getText().toString() + " " + description.getText().toString());
 				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
 				// Signal BrowserActivity to update ListView
-				intent.putExtra("updateListView", true);
+				//intent.putExtra("updateListView", true);
                 startActivity(intent);
 			}
 			

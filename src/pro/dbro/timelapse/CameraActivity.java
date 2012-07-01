@@ -36,6 +36,9 @@ public class CameraActivity extends Activity {
 	private static TimeLapseApplication c;
 	private int timelapse_id;
 	
+	// Determine whether or not to update ListView onPause
+	public static Boolean picture_taken;
+	
 	// ImageView overlayed on the Camera preview
 	private static ImageView cameraOverlay;
 	
@@ -57,6 +60,8 @@ public class CameraActivity extends Activity {
 
         // Obtain camera instance
         mCamera = getCameraInstance();
+        
+        picture_taken = false;
         
         if (mCamera == null){
         	showCameraErrorDialog();
@@ -92,6 +97,7 @@ public class CameraActivity extends Activity {
     @Override
     public void onPause(){
     	super.onPause();
+    	
     	// Release camera for other applications
     	releaseCamera();
     }
@@ -112,22 +118,11 @@ public class CameraActivity extends Activity {
         
         timelapse_id = intent.getExtras().getInt("timelapse_id");
         
-        fetchOverlayFromTimeLapse(timelapse_id);
+        if(c.time_lapse_map.get(timelapse_id).last_image_path != null)
+        	setCameraOverlay(c.time_lapse_map.get(timelapse_id).last_image_path);
     	
     }
-    
-    private void fetchOverlayFromTimeLapse(int timelapse_id){
-    	File timelapse_root = new File(Environment.getExternalStorageDirectory(), FileUtils.MEDIA_DIRECTORY);
-		if(!timelapse_root.isDirectory())
-			return;
-		File timelapse_dir = new File(timelapse_root, String.valueOf(timelapse_id));
-		if(timelapse_dir.exists() && timelapse_dir.isDirectory()){
-			File last_image = new File(timelapse_dir, String.valueOf(c.time_lapse_map.get(timelapse_id).image_count));
-			setCameraOverlay(last_image.getAbsolutePath());
-		}
-        
-    }
-    
+
     private OnTouchListener shutterListener = new OnTouchListener(){
 
 		@Override
@@ -151,7 +146,7 @@ public class CameraActivity extends Activity {
     public static void setCameraOverlay(String filepath){
     	// Decode the just-captured picture from file and display it 
     	// in the cameraOverlay ImageView
-    	
+    	Log.d("setCameraOverlay","path:"+filepath);
     	File imgFile = new  File(filepath);
     	if(imgFile.exists()){
     	    Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());

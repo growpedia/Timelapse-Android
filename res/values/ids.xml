@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<!--  ListItemRelativeLayout tags corresponding to touch event type -->
 <item type="id" name="view_onclick_action" />
 <item type="id" name="view_related_timelapse" />
 
+<!--  ListItemRelativeLayout id prefix. 
+	  Concatenated with timelapse_id to form a unique id in ListView -->
+<item type="integer" name="browser_list_item" >2147</item>
+
+<!--  LocalBroadcast intent ids -->
+<item type="id" name="browserActivity_message" />
+<!--  LocalBroadcast result ids -->
 <item type="id" name="filesystem_parse_complete" />
-<item type="id" name="timelapse_to_filesystem_complete" />
+<item type="id" name="filesystem_modified" />
+
 </resources>
