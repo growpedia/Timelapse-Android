@@ -6,22 +6,20 @@
     android:orientation="vertical" >
 
     <FrameLayout
-    android:id="@+id/camera_preview"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_weight="1"
-    />
-    
+        android:id="@+id/camera_preview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1" />
+
     <ImageView
-    android:id="@+id/camera_overlay"
-    android:src="@drawable/cage"
-    android:background="#0000" 
-    android:scaleType="fitXY"
-    android:layout_alignTop="@id/camera_preview"
-    android:layout_alignBottom="@id/camera_preview"
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content"
-    android:visibility="gone"
-  />
+        android:id="@+id/camera_overlay"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/camera_preview"
+        android:layout_alignTop="@id/camera_preview"
+        android:background="#0000"
+        android:scaleType="fitXY"
+        android:src="@drawable/cage"
+        android:visibility="gone" />
 
 </RelativeLayout>

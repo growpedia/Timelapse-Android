@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import pro.dbro.timelapse.R.id;
 
@@ -17,6 +18,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
+import android.hardware.Camera.Size;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -68,6 +70,9 @@ public class CameraActivity extends Activity {
         }
         else{
         	// Camera is available. Onward Ho!
+        	
+        	// Assign Camera parameters
+        	setupCamera();
 	        // Obtain SurfaceView for displaying camera preview
 	        mCameraPreview = new CameraPreview(this, mCamera);
 	        FrameLayout preview = (FrameLayout) findViewById(id.camera_preview);
@@ -193,6 +198,34 @@ public class CameraActivity extends Activity {
 		}).create();
 
 		noCameraAlertDialog.show();
+	}
+	
+	private void setupCamera(){
+		// set preview size and make any resize, rotate or
+        // reformatting changes here
+        
+        List supportedPictureSizes = mCamera.getParameters().getSupportedPictureSizes();
+        Camera.Parameters parameters = mCamera.getParameters();
+        parameters.setPictureSize(((Camera.Size)supportedPictureSizes.get(0)).width, ((Camera.Size)supportedPictureSizes.get(0)).height);
+        // Set autoFocus mode
+        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        
+        // Set Camera preview params
+        List<Size> sizes = parameters.getSupportedPreviewSizes();
+        // match preview to output picture aspect ratio
+        Size size = parameters.getPictureSize();
+        
+        Size optimalSize = CameraUtils.getOptimalPreviewSize(this,
+                sizes, (double) size.width / size.height);
+        
+        Size original = parameters.getPreviewSize();
+        if (!original.equals(optimalSize)) {
+            parameters.setPreviewSize(optimalSize.width, optimalSize.height);
+        }
+        
+        //parameters.setPreviewSize(((Camera.Size)supportedPictureSizes.get(8)).width, ((Camera.Size)supportedPictureSizes.get(8)).height);
+        //Log.d("onSurfaceChanged","width: "+ String.valueOf(((Camera.Size)parameters.getPreviewSize()).width) + " x "+ String.valueOf(((Camera.Size)parameters.getPreviewSize()).height));
+        mCamera.setParameters(parameters);
 	}
    
 }

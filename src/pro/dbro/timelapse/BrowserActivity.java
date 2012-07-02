@@ -111,6 +111,7 @@ public class BrowserActivity extends SherlockListActivity {
     
     // TimeLapseViewerActivity starts this activity with a bundled intent message to update view
     // Deprecated: FileUtils.SaveTimeLapseOnFilesystem will signal re-draw
+   /*
     @Override
     protected void onNewIntent (Intent intent){
     	Log.d("onNewIntent","called");
@@ -121,6 +122,7 @@ public class BrowserActivity extends SherlockListActivity {
         	populateListView(valuesList);
     	}
     }
+    */
     
     @Override
     protected void onPause(){

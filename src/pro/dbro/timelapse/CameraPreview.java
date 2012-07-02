@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.Size;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -57,23 +58,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         } catch (Exception e){
           // ignore: tried to stop a non-existent preview
         }
-
-        // set preview size and make any resize, rotate or
-        // reformatting changes here
-        
-        List supportedSizes = mCamera.getParameters().getSupportedPictureSizes();
-        Camera.Parameters parameters = mCamera.getParameters();
-        // Set autoFocus mode
-        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-        // Attempt to set preview resolution
-        parameters.setPreviewSize(((Camera.Size)supportedSizes.get(8)).width, ((Camera.Size)supportedSizes.get(8)).height);
-        Log.d("onSurfaceChanged","width: "+ String.valueOf(((Camera.Size)parameters.getPreviewSize()).width) + " x "+ String.valueOf(((Camera.Size)parameters.getPreviewSize()).height));
-        mCamera.setParameters(parameters);
         // start preview with new settings
         try {
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
-            tryAutoFocus();
+            //tryAutoFocus();
 
         } catch (Exception e){
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
