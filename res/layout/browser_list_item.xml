@@ -56,14 +56,14 @@
 	    android:id="@+id/list_item_camera"
 	    android:layout_width="40dp"
 	    android:layout_height="fill_parent"
-	    android:src="@drawable/menu_camera"
-	    android:background="#0000"
-	    android:adjustViewBounds="true"
-	    android:layout_centerVertical="true"
+	    android:layout_alignParentBottom="true"
+	    android:layout_alignParentRight="true"
 	    android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginRight="4dip"
+	    android:layout_centerVertical="true"
+	    android:layout_marginRight="4dip"
+	    android:adjustViewBounds="true"
+	    android:background="#0000"
+	    android:src="@drawable/menu_camera"
 	    android:visibility="visible" />
 
 </pro.dbro.timelapse.ListItemRelativeLayout>
