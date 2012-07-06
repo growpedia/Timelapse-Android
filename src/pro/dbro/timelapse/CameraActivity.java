@@ -38,6 +38,10 @@ public class CameraActivity extends Activity {
 	private static TimeLapseApplication c;
 	private int timelapse_id;
 	
+	// The optimal image size for the device's screen
+	// see getOptimalPreviewSize()
+	private static Size optimalSize;
+	
 	// Determine whether or not to update ListView onPause
 	public static Boolean picture_taken;
 	
@@ -153,10 +157,17 @@ public class CameraActivity extends Activity {
     	// in the cameraOverlay ImageView
     	Log.d("setCameraOverlay","path:"+filepath);
     	File imgFile = new  File(filepath);
+    	Bitmap optimal_bitmap;
     	if(imgFile.exists()){
-    	    Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+    		if(optimalSize != null){
+    			optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(imgFile.getAbsolutePath(), optimalSize.width, optimalSize.height);
+    		}
+    		else{
+    			// optimalSize should always be set by this point
+    			return;
+    		}
 
-    	    cameraOverlay.setImageBitmap(myBitmap);
+    	    cameraOverlay.setImageBitmap(optimal_bitmap);
     	    // Ensure camera_overlay is visible
     	    // visibility: 0 : visible, 1 : invisible, 2 : gone
         	cameraOverlay.setVisibility(0);
@@ -168,7 +179,7 @@ public class CameraActivity extends Activity {
     /** Handle shutter action feedback 
      *  CALLED BY: CameraUtils.mShutterFeedback (callback method passed to mCamera.takePicture(...) via shutterListener) */
 	public static void showShutterFeedback() {
-		CharSequence text = "Snap!";
+		CharSequence text = "Saving Image...";
 		int duration = Toast.LENGTH_SHORT;
 
 		Toast toast = Toast.makeText(c, text, duration);
@@ -215,7 +226,7 @@ public class CameraActivity extends Activity {
         // match preview to output picture aspect ratio
         Size size = parameters.getPictureSize();
         
-        Size optimalSize = CameraUtils.getOptimalPreviewSize(this,
+        optimalSize = CameraUtils.getOptimalPreviewSize(this,
                 sizes, (double) size.width / size.height);
         
         Size original = parameters.getPreviewSize();
