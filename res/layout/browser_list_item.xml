@@ -7,12 +7,12 @@
 <pro.dbro.timelapse.ListItemRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/list_item_container"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content" >
+    android:layout_height="70dp" >
 
      <ImageView
 	    android:id="@+id/list_item_image"
 	    android:layout_width="70dp"
-	    android:layout_height="100dp"
+	    android:layout_height="fill_parent"
 	    android:src="@drawable/cage"
 	    android:background="#0000"
 	    android:adjustViewBounds="true"
@@ -28,7 +28,7 @@
 	    android:layout_toRightOf="@id/list_item_image"
 	    android:layout_toLeftOf="@+id/list_item_camera"
         android:layout_alignParentTop="true"
-        android:layout_above="@+id/body"
+        android:layout_above="@+id/list_item_body"
         android:layout_alignWithParentIfMissing="true"
         android:gravity="center_vertical"
         android:singleLine="true"
@@ -54,7 +54,7 @@
 	
 	<ImageView
 	    android:id="@+id/list_item_camera"
-	    android:layout_width="40dp"
+	    android:layout_width="60dp"
 	    android:layout_height="fill_parent"
 	    android:layout_alignParentBottom="true"
 	    android:layout_alignParentRight="true"
@@ -62,7 +62,6 @@
 	    android:layout_centerVertical="true"
 	    android:layout_marginRight="4dip"
 	    android:adjustViewBounds="true"
-	    android:background="#0000"
 	    android:src="@drawable/menu_camera"
 	    android:visibility="visible" />
 

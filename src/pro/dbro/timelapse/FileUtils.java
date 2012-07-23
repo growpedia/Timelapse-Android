@@ -392,6 +392,7 @@ public class FileUtils {
 				out = new FileOutputStream(thumbnail_file);
 				thumbnail_bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
 				timelapse.thumbnail_path = thumbnail_file.getAbsolutePath();
+				Log.d("Thumbnail","TL " + String.valueOf(timelapse.id) + " thumb set to " + timelapse.thumbnail_path);
 			} catch (FileNotFoundException e) {
 				// Not sure when this would happen...
 				// FileOutputStream creates file if it doesn't exist (the intended case)

@@ -64,6 +64,7 @@ public class BrowserActivity extends SherlockListActivity {
     // Handle listview item select
     @Override 
     public void onListItemClick(ListView l, View v, int position, long id) {
+    	Log.d("ListView","ListItemClick");
         if(((String)v.getTag(R.id.view_onclick_action)).equals("camera")){
         	//  launch CameraActivity
         	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
@@ -164,6 +165,7 @@ public class BrowserActivity extends SherlockListActivity {
     				((TextView)browser_list_item.findViewById(R.id.list_item_headline)).setText(timelapse.name);
     				((TextView)browser_list_item.findViewById(R.id.list_item_body)).setText(timelapse.description);
     				if(timelapse.image_count != 0){
+    					Log.d("BrowserActivity","TL " + String.valueOf(timelapse.id) + " thumb set to " + timelapse.thumbnail_path);
 	    				Bitmap thumb_bitmap = BitmapFactory.decodeFile(timelapse.thumbnail_path);
 	    	    	    ((ImageView)browser_list_item.findViewById(R.id.list_item_image)).setImageBitmap(thumb_bitmap);
     				}
