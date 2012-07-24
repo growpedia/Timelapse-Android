@@ -16,5 +16,7 @@
     <string name="create_timelapse_dialog_description_hint">Description</string>
     <string name="create_timelapse_button">Create TimeLapse</string>
     <string name="save_timelapse_button">Save</string>
+    
+    <string name="no_timelapses_found">No TimeLapses Found</string>
 
 </resources>

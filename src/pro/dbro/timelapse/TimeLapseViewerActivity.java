@@ -30,7 +30,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // With the ActionBar, we no longer need to hide the hideous Android Window Title
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.timelapse);
@@ -110,10 +110,8 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 					//intent.putExtra("updateListView", true);
 	                startActivity(intent);
 		    	}
-			}
-			
+			}	
 		}
-    	
     };
     
     // Create a new timelapse
@@ -133,8 +131,6 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 				//intent.putExtra("updateListView", true);
                 startActivity(intent);
 			}
-			
 		}
-    	
     };
 }

@@ -37,6 +37,10 @@ public class BrowserActivity extends SherlockListActivity {
 	
 	// The adapter which connects the application data to the ListView
 	SimpleAdapter browserAdapter;
+	TextView empty;
+	
+	// debug
+	ListView list;
 	
 	public static TimeLapseApplication c;
 	
@@ -47,6 +51,9 @@ public class BrowserActivity extends SherlockListActivity {
         setContentView(R.layout.browser);
         
         c = (TimeLapseApplication)getApplicationContext();
+        
+        list = (ListView) findViewById(android.R.id.list);
+        empty = (TextView) list.findViewById(android.R.id.empty);
 
         // Establish LocalBroadcastManager for communication with other Classes
         LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
@@ -149,6 +156,10 @@ public class BrowserActivity extends SherlockListActivity {
     			if(type == R.id.filesystem_parse_complete){
 		    		Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
 		    		TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
+		    		// No Timelapses found
+		    		if( ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).size() == 0){
+		    			empty.setText(R.string.no_timelapses_found);
+		    		}
 		    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
 		    	    populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
     			}
@@ -159,9 +170,11 @@ public class BrowserActivity extends SherlockListActivity {
     					return;
     				TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
     				TimeLapse timelapse = tla.time_lapse_map.get(timelapse_id);
-    				
+    				//ListView lv = (ListView) findViewById()
     				int view_id = Integer.parseInt(String.valueOf(timelapse_id));
     				RelativeLayout browser_list_item = ((RelativeLayout) findViewById(view_id));
+    				// If the timelapse was just created WILL CRASH
+    				// Here comes the refactor
     				((TextView)browser_list_item.findViewById(R.id.list_item_headline)).setText(timelapse.name);
     				((TextView)browser_list_item.findViewById(R.id.list_item_body)).setText(timelapse.description);
     				if(timelapse.image_count != 0){

@@ -50,6 +50,10 @@ public class TimeLapse implements Serializable{
 		// Create the filesystem representation of this TimeLapse in another thread
 		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this);
 	}
+	
+	public String toString(){
+		return String.valueOf(this.id) + "-" + this.name;
+	}
 	/* Deprecated: FileUtils.generateThumbnail sets field on successful thumbnail generation
 	public String getThumbnailPath(){
 
