@@ -3,6 +3,7 @@
 <!--  ListItemRelativeLayout tags corresponding to touch event type -->
 <item type="id" name="view_onclick_action" />
 <item type="id" name="view_related_timelapse" />
+<item type="id" name="view_cache" />
 
 <!--  ListItemRelativeLayout id prefix. 
 	  Concatenated with timelapse_id to form a unique id in ListView -->

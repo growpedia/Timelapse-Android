@@ -37,6 +37,7 @@ public class BrowserActivity extends SherlockListActivity {
 	
 	// The adapter which connects the application data to the ListView
 	SimpleAdapter browserAdapter;
+	TimeLapseArrayAdapter adapter;
 	TextView empty;
 	
 	// debug
@@ -62,6 +63,7 @@ public class BrowserActivity extends SherlockListActivity {
         // Load Timelapses from external storage
         Log.d("OnCreate","Beginning filesystem read");
         new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+        
     }
     
     public static TimeLapseApplication getContext() {
@@ -190,9 +192,16 @@ public class BrowserActivity extends SherlockListActivity {
     private void populateListView(ArrayList<TimeLapse> data){
     	// Populate ListView
         // (Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to)
-        browserAdapter = new SimpleAdapter(this.getApplicationContext(), loadItems(data), R.layout.browser_list_item, BROWSER_LIST_ITEM_KEYS, BROWSER_LIST_ITEM_VALUES);
-        browserAdapter.setViewBinder(new BrowserViewBinder());
-        setListAdapter(browserAdapter);
+        //browserAdapter = new SimpleAdapter(this.getApplicationContext(), loadItems(data), R.layout.browser_list_item, BROWSER_LIST_ITEM_KEYS, BROWSER_LIST_ITEM_VALUES);
+        //browserAdapter.setViewBinder(new BrowserViewBinder());
+        //setListAdapter(browserAdapter);
+    	
+    	// temp
+    	adapter = new TimeLapseArrayAdapter(this, data);
+        adapter.setNotifyOnChange(true);
+        list.setAdapter(adapter);
+        adapter.editItemTitle(0, "HEY HEY!");
+        Log.d("AdapterGet","Retrieve adapter data: " + adapter.getItem(0).name);
     }
     
     // Create Map describing ListView contents. Fed as "data" to SimpleAdapter constructor

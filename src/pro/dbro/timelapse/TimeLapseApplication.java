@@ -10,6 +10,7 @@ import android.util.Log;
 public class TimeLapseApplication extends Application {
 	// id -> TimeLapse
 	public HashMap<Integer,TimeLapse> time_lapse_map = new HashMap<Integer,TimeLapse>();
+	public ArrayList<TimeLapse> time_lapse_list = new ArrayList<TimeLapse>();
 	public int nextTimeLapseId = 0;
 
 	
