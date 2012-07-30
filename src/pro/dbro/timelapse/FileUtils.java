@@ -110,11 +110,17 @@ public class FileUtils {
 	// Returns: ArrayList of TimeLapses corresponding to filepath contents
 	public static class ParseTimeLapsesFromFilesystem extends AsyncTask<String, Void, ArrayList<TimeLapse>>{
 		private String TAG = "ParseTimeLapseFromFilesystem"; //  for debug
+		SQLiteManager db;
+		
+		public ParseTimeLapsesFromFilesystem(SQLiteManager db){
+			super();
+			this.db = db;
+		}
 
 		// This method is executed in a separate thread
 		@Override
 		protected ArrayList<TimeLapse> doInBackground(String... filePath) {
-			
+						
 			ArrayList<TimeLapse> result = new ArrayList<TimeLapse>();
 			// For now, hardcode filePath directory
 			//File dir = new File(filePath[0]);
@@ -136,6 +142,7 @@ public class FileUtils {
 				Log.d(TAG,"TimeLapse directory found!");
 			
 			TimeLapse temp;
+			Gson gson = new Gson();
 			for (File child : dir.listFiles()) {
 				Log.d(TAG,"Inspecing child: " + child.getAbsolutePath());
 				if (!child.isDirectory() || ".".equals(child.getName()) || "..".equals(child.getName())) {
@@ -148,7 +155,6 @@ public class FileUtils {
 				if (metadata.exists()){
 					Log.d(TAG,"Metadata found");
 					try{
-						Gson gson = new Gson();
 						// automatically deserialize JSON attributes matching TimeLapse fields
 						temp = gson.fromJson(fileToString(metadata), TimeLapse.class);
 						// manually assign other attributes

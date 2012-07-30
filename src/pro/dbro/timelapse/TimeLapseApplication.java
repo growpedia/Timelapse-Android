@@ -5,12 +5,26 @@ import java.util.HashMap;
 import java.util.Set;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 public class TimeLapseApplication extends Application {
 	// id -> TimeLapse
 	public HashMap<Integer,TimeLapse> time_lapse_map = new HashMap<Integer,TimeLapse>();
 	public int nextTimeLapseId = 0;
+	
+	// Singleton
+	private static TimeLapseApplication instance;
+
+    public TimeLapseApplication()
+    {
+        instance = this;
+    }
+
+    public static Context getContext()
+    {
+        return instance;
+    }
 
 	
 	public void setTimeLapses(ArrayList<TimeLapse> list){

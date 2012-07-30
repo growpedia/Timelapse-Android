@@ -16,6 +16,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -41,7 +42,7 @@ public class BrowserActivity extends SherlockListActivity {
 	
 	// debug
 	ListView list;
-	
+
 	public static TimeLapseApplication c;
 	
 	/** Called when the activity is first created. */
@@ -61,7 +62,8 @@ public class BrowserActivity extends SherlockListActivity {
         
         // Load Timelapses from external storage
         Log.d("OnCreate","Beginning filesystem read");
-        new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+        new FileUtils.ParseTimeLapsesFromFilesystem(c.db).execute("");
+
     }
     
     public static TimeLapseApplication getContext() {
@@ -160,8 +162,12 @@ public class BrowserActivity extends SherlockListActivity {
 		    		if( ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).size() == 0){
 		    			empty.setText(R.string.no_timelapses_found);
 		    		}
+		    		else{
+		    			populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+		    		}
+		    		Cursor test = tla.db.cursorSelectAll();
 		    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
-		    	    populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+		    	    
     			}
     			else if(type == R.id.filesystem_modified){
     				Log.d("BroadcastReceiver","Smart ListView refresh");
