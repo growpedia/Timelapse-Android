@@ -110,16 +110,17 @@ public class FileUtils {
 	// Returns: ArrayList of TimeLapses corresponding to filepath contents
 	public static class ParseTimeLapsesFromFilesystem extends AsyncTask<String, Void, ArrayList<TimeLapse>>{
 		private String TAG = "ParseTimeLapseFromFilesystem"; //  for debug
-		SQLiteManager db;
 		
-		public ParseTimeLapsesFromFilesystem(SQLiteManager db){
+		public ParseTimeLapsesFromFilesystem(){
 			super();
-			this.db = db;
 		}
 
 		// This method is executed in a separate thread
 		@Override
 		protected ArrayList<TimeLapse> doInBackground(String... filePath) {
+			
+			// Get SQLite connection
+			SQLiteManager sqliteManager = SQLiteManager.getInstance();
 						
 			ArrayList<TimeLapse> result = new ArrayList<TimeLapse>();
 			// For now, hardcode filePath directory
@@ -171,10 +172,13 @@ public class FileUtils {
 						// assign id based on dir name
 						temp.id = Integer.parseInt(child.getName());
 						result.add(temp);
+						// Add the timelapse to the database
+						sqliteManager.insertTimeLapse(temp);
 						Log.d(TAG,"Successfully parsed timelapse");
 					}
 					catch(Throwable t){
-						Log.d(TAG,t.getLocalizedMessage());
+						Log.d(TAG,""+ t.toString());
+						//Log.d(TAG,t.getLocalizedMessage());
 					}
 				}
 				else{
@@ -418,7 +422,7 @@ public class FileUtils {
 		@Override
 		public boolean accept(File pathname) {
 			String[] pathArray = pathname.getPath().split(pathname.separator);
-			Log.d("ImageFilter", pathArray.toString());
+			//Log.d("ImageFilter", pathArray.toString());
 			String[] extensionArray = pathArray[pathArray.length-1].split("\\.");
 			// if the pathname represents a directory, it won't have extension
 			if (extensionArray.length == 1)

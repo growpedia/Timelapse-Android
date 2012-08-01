@@ -1,5 +1,6 @@
 package pro.dbro.timelapse;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
@@ -27,21 +28,25 @@ public class SQLiteManager{
     private final String TAG = this.getClass().getSimpleName();
 
     //DATABASE
-    private static final String DATABASE_NAME = "timelapse";
+    private static final String DATABASE_NAME = "timelapse.db";
     private static final int DATABASE_VERSION = 1;
 
     //TABLE NAMES
     private static final String TABLE_NAME = "timelapses";
     
     private static final String CREATE_TABLE_STATEMENT = "create table " + TABLE_NAME + " (_id integer primary key autoincrement, " 
-	        + "name text not null, description text not null, " 
+	        + "name text not null, description text, " 
 	        + "creation_date text not null, modified_date text not null, " 
-	        + "image_count integer not null, directory_path text not null " 
-	        + "id integer not null, last_image_path text not null" 
-	        + "thumbnail_path text not null ) ";
+	        + "image_count integer not null, directory_path text not null, " 
+	        + "id integer not null, last_image_path text," 
+	        + "thumbnail_path text, "
+	        + "unique(id) on conflict replace);";
+    
+    // this is mostly good, except the _id integer increases by the total # of timelapses every app load...
+    // why sqlite don't you have on conflict UPDATE
 
     //MEMBER VARIABLES
-    private SQLiteWrapper mSQLiteWrapper;
+    //private SQLiteWrapper mSQLiteWrapper;
     private SQLiteDatabase mDB;
     
     //Fields describing application-specific Java Object corresponding to a Table row
@@ -106,37 +111,60 @@ public class SQLiteManager{
     	}
     	
     	sql += ")";
-    	Log.d("DBHelper","Insert SQL Generated: " + sql);
-        mDB.execSQL(sql);
+    	try{
+    	//Log.d("DBHelper","Insert SQL Generated: " + sql);
+    	mDB.execSQL(sql);
+    	Log.d("DBHelper","'INSERT Success'");
+    	}
+    	catch(Throwable t){
+    		Log.d("DBHelper","fail: "+t.toString());
+    	}
+        
     }
     
     public synchronized void insertTimeLapse(TimeLapse tl){
     	//TODO: Multiple sqllite insert
     	// http://stackoverflow.com/questions/1609637/is-it-possible-to-insert-multiple-rows-at-a-time-in-an-sqlite-database
-    	
+
+    	// Generic object field introspection ignore @NotForDatabase annotated fields
+    	try{
     	if(object_fields == null){
     		Field[] all_object_fields = tl.getClass().getDeclaredFields();
     		ArrayList<Field> object_fields_list = new ArrayList<Field>();
     		for(int x=0;x<all_object_fields.length;x++){
-    			if(all_object_fields[x].getAnnotation(NotForExport.class) != null)
+    			Annotation[] annotations = all_object_fields[x].getDeclaredAnnotations();
+    			if( all_object_fields[x].isAnnotationPresent(NotForDatabase.class) ){
+    				Log.d("insertTimeLapse","skipping NotForExport field");
     				continue;
+    			}
         		object_fields_list.add(all_object_fields[x]);
         	}
-    		
-    		object_fields = (Field[]) object_fields_list.toArray();
+    		//object_fields = (Field[]) object_fields_list.toArray(contents);
+    		object_fields = new Field[object_fields_list.size()];
+    		object_fields_list.toArray(object_fields);
     	}
     	
     	String[] object_values = new String[object_fields.length];
     	for(int x=0;x<object_fields.length;x++){
     		try {
 				object_values[x] = object_fields[x].get(tl).toString();
+			} catch (NullPointerException e){
+				object_values[x] = null;
+				
 			} catch (IllegalArgumentException e) {
+				Log.d("Insert Error", e.toString());
 				e.printStackTrace();
 			} catch (IllegalAccessException e) {
 				e.printStackTrace();
+				Log.d("Insert Error", e.toString());
 			}
     	}
     	insert(object_fields, object_values);
+    	
+    	}catch(NullPointerException exception){
+    		Log.d("insertTimeLapse",""+exception.toString());
+    	}
+    	
 
     }
     
@@ -184,7 +212,7 @@ public class SQLiteManager{
                 null,       // Selection Args
                 null,       // SQL GROUP BY 
                 null,       // SQL HAVING
-                "time DESC");    // SQL ORDER BY
+                "id DESC");    // SQL ORDER BY
         return cursor;
     }
     

@@ -62,7 +62,7 @@ public class BrowserActivity extends SherlockListActivity {
         
         // Load Timelapses from external storage
         Log.d("OnCreate","Beginning filesystem read");
-        new FileUtils.ParseTimeLapsesFromFilesystem(c.db).execute("");
+        new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
 
     }
     
@@ -156,7 +156,7 @@ public class BrowserActivity extends SherlockListActivity {
     		  int type = intent.getIntExtra("type", -1);
     		if(type != -1){
     			if(type == R.id.filesystem_parse_complete){
-		    		Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
+		    		//Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
 		    		TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
 		    		// No Timelapses found
 		    		if( ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).size() == 0){
@@ -165,7 +165,10 @@ public class BrowserActivity extends SherlockListActivity {
 		    		else{
 		    			populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
 		    		}
-		    		Cursor test = tla.db.cursorSelectAll();
+		    		SQLiteManager sqliteManager = SQLiteManager.getInstance();
+		    		Cursor test = sqliteManager.cursorSelectAll();
+		    		int numResults = test.getCount();
+		    		
 		    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
 		    	    
     			}
@@ -221,8 +224,8 @@ public class BrowserActivity extends SherlockListActivity {
     		}
     		mapList.add(itemMap);
     	}
-    	Log.d("maplist_in",list.toString());
-    	Log.d("maplist_out",mapList.toString());
+    	//Log.d("maplist_in",list.toString());
+    	//Log.d("maplist_out",mapList.toString());
     	return mapList;
     }
 

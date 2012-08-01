@@ -26,18 +26,22 @@ public class TimeLapse implements Serializable{
 	public String last_image_path;	// path to last image. Set by FileUtils.findOrGenerateThumbnail. Used by CameraActivity for overlay
 	@NotForExport
 	public String thumbnail_path;	// path to current thumbnail. Set by FileUtils.findOrGenerateThumbnail
+	@NotForDatabase
 	@NotForExport
 	public static final String thumbnail_dir = "thumbnails";
+	@NotForDatabase
 	@NotForExport
 	public static final String thumbnail_suffix = "_thumb";
+	@NotForDatabase
 	@NotForExport
 	public static int thumbnail_height = 100;	// pixels
+	@NotForDatabase
 	@NotForExport
 	public static int thumbnail_width = 100;	// pixels
 	
 	// List of filename Strings within directoryPath
-	@NotForExport
-	public ArrayList<String> images;
+	//@NotForExport
+	//public ArrayList<String> images;
 	
 	public TimeLapse(String name, String description, int id){
 		super();
