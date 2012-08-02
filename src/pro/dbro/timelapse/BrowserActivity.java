@@ -7,21 +7,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.actionbarsherlock.app.SherlockListActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.app.Activity;
+import android.app.LoaderManager.LoaderCallbacks;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
@@ -30,7 +38,7 @@ import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-public class BrowserActivity extends SherlockListActivity {
+public class BrowserActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 	
 	// These parallel arrays map plain-text timelapse properties to view resource IDs within a ListView item
 	private static final String[] BROWSER_LIST_ITEM_KEYS = {"title", "body", "timelapse", "thumbnail"};
@@ -38,10 +46,16 @@ public class BrowserActivity extends SherlockListActivity {
 	
 	// The adapter which connects the application data to the ListView
 	SimpleAdapter browserAdapter;
+	// The real loader:
+	SimpleCursorAdapter adapter;
 	TextView empty;
 	
 	// debug
 	ListView list;
+	
+	// Loader stuff
+	
+	//DB helper
 
 	public static TimeLapseApplication c;
 	
@@ -61,8 +75,19 @@ public class BrowserActivity extends SherlockListActivity {
       	      new IntentFilter(String.valueOf(R.id.browserActivity_message)));
         
         // Load Timelapses from external storage
-        Log.d("OnCreate","Beginning filesystem read");
-        new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+        //Log.d("OnCreate","Beginning filesystem read");
+        //new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+        
+        // Set cursorAdapter
+        String[] from = new String[] { SQLiteWrapper.COLUMN_NAME };
+		// Fields on the UI to which we map
+		int[] to = new int[] { R.id.list_item_body };
+
+		getSupportLoaderManager().initLoader(0, null, this);
+		//adapter = new SimpleCursorAdapter(this, R.layout.browser_list_item, null, from, to, 0);
+		adapter = new SimpleCursorAdapter(this, R.layout.browser_list_item, null, from, to, 0);
+		
+		list.setAdapter(adapter);
 
     }
     
@@ -70,6 +95,7 @@ public class BrowserActivity extends SherlockListActivity {
         return c;
     }
     
+    /*
     // Handle listview item select
     @Override 
     public void onListItemClick(ListView l, View v, int position, long id) {
@@ -86,11 +112,12 @@ public class BrowserActivity extends SherlockListActivity {
             startActivity(intent);
         }
     }
+    */
     
     // Populate ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.layout.browser_menu, menu);
         return true;
     }
@@ -165,10 +192,7 @@ public class BrowserActivity extends SherlockListActivity {
 		    		else{
 		    			populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
 		    		}
-		    		SQLiteManager sqliteManager = SQLiteManager.getInstance();
-		    		Cursor test = sqliteManager.cursorSelectAll();
-		    		int numResults = test.getCount();
-		    		
+		    				    		
 		    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
 		    	    
     			}
@@ -199,9 +223,20 @@ public class BrowserActivity extends SherlockListActivity {
     private void populateListView(ArrayList<TimeLapse> data){
     	// Populate ListView
         // (Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to)
+    	/*
         browserAdapter = new SimpleAdapter(this.getApplicationContext(), loadItems(data), R.layout.browser_list_item, BROWSER_LIST_ITEM_KEYS, BROWSER_LIST_ITEM_VALUES);
         browserAdapter.setViewBinder(new BrowserViewBinder());
         setListAdapter(browserAdapter);
+        */
+		/*
+    	Cursor cursor = sqliteManager.cursorSelectAll();
+		//getLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>) this);
+		getSupportLoaderManager().initLoader(0, null, this);
+		adapter = new TimeLapseCursorAdapter((Context)c,
+                R.layout.browser_list_item, cursor);
+		this.list.setAdapter(adapter);
+		*/
+
     }
     
     // Create Map describing ListView contents. Fed as "data" to SimpleAdapter constructor
@@ -228,5 +263,30 @@ public class BrowserActivity extends SherlockListActivity {
     	//Log.d("maplist_out",mapList.toString());
     	return mapList;
     }
+    
+    /**
+     * Welcome to Loader Town
+     */
+    
+ // Creates a new loader after the initLoader () call
+ 	@Override
+ 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+ 		String[] projection = { SQLiteWrapper.COLUMN_ID, SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION, SQLiteWrapper.COLUMN_THUMBNAIL_PATH };
+ 		CursorLoader cursorLoader = new CursorLoader(this,
+ 				TimeLapseContentProvider.CONTENT_URI, projection, null, null, null);
+ 		return cursorLoader;
+ 	}
+
+ 	@Override
+ 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+ 		Log.d("onLoadFinished", String.valueOf(data.getCount()));
+ 		adapter.swapCursor(data);
+ 	}
+
+ 	@Override
+ 	public void onLoaderReset(Loader<Cursor> loader) {
+ 		// data is not available anymore, delete reference
+ 		adapter.swapCursor(null);
+ 	}
 
 }

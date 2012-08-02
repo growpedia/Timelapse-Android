@@ -120,7 +120,7 @@ public class FileUtils {
 		protected ArrayList<TimeLapse> doInBackground(String... filePath) {
 			
 			// Get SQLite connection
-			SQLiteManager sqliteManager = SQLiteManager.getInstance();
+			//SQLiteManager sqliteManager = SQLiteManager.getInstance();
 						
 			ArrayList<TimeLapse> result = new ArrayList<TimeLapse>();
 			// For now, hardcode filePath directory
@@ -173,7 +173,7 @@ public class FileUtils {
 						temp.id = Integer.parseInt(child.getName());
 						result.add(temp);
 						// Add the timelapse to the database
-						sqliteManager.insertTimeLapse(temp);
+						//sqliteManager.insertTimeLapse(temp);
 						Log.d(TAG,"Successfully parsed timelapse");
 					}
 					catch(Throwable t){
