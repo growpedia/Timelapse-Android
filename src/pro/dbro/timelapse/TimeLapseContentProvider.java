@@ -45,6 +45,7 @@ public class TimeLapseContentProvider extends ContentProvider {
 			database = new SQLiteWrapper(getContext());
 			return false;
 		}
+		
 
 		@Override
 		public Cursor query(Uri uri, String[] projection, String selection,

@@ -32,6 +32,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -39,23 +41,11 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 public class BrowserActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Cursor> {
-	
-	// These parallel arrays map plain-text timelapse properties to view resource IDs within a ListView item
-	private static final String[] BROWSER_LIST_ITEM_KEYS = {"title", "body", "timelapse", "thumbnail"};
-	private static final int[] BROWSER_LIST_ITEM_VALUES = {R.id.list_item_headline, R.id.list_item_body, R.id.list_item_container, R.id.list_item_image};
-	
-	// The adapter which connects the application data to the ListView
-	SimpleAdapter browserAdapter;
+
 	// The real loader:
 	SimpleCursorAdapter adapter;
 	TextView empty;
-	
-	// debug
 	ListView list;
-	
-	// Loader stuff
-	
-	//DB helper
 
 	public static TimeLapseApplication c;
 	
@@ -68,7 +58,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         c = (TimeLapseApplication)getApplicationContext();
         
         list = (ListView) findViewById(android.R.id.list);
-        empty = (TextView) list.findViewById(android.R.id.empty);
+        empty = (TextView) findViewById(android.R.id.empty);
 
         // Establish LocalBroadcastManager for communication with other Classes
         LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
@@ -77,17 +67,11 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         // Load Timelapses from external storage
         //Log.d("OnCreate","Beginning filesystem read");
         //new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
-        
-        // Set cursorAdapter
-        String[] from = new String[] { SQLiteWrapper.COLUMN_NAME };
-		// Fields on the UI to which we map
-		int[] to = new int[] { R.id.list_item_body };
-
-		getSupportLoaderManager().initLoader(0, null, this);
-		//adapter = new SimpleCursorAdapter(this, R.layout.browser_list_item, null, from, to, 0);
-		adapter = new SimpleCursorAdapter(this, R.layout.browser_list_item, null, from, to, 0);
-		
+ 
+        getSupportLoaderManager().initLoader(0, null, this);
+        adapter = new TimeLapseCursorAdapter(this, null);
 		list.setAdapter(adapter);
+		list.setOnItemClickListener(listItemClickListener);
 
     }
     
@@ -95,24 +79,28 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         return c;
     }
     
-    /*
+    
     // Handle listview item select
-    @Override 
-    public void onListItemClick(ListView l, View v, int position, long id) {
-    	Log.d("ListView","ListItemClick");
-        if(((String)v.getTag(R.id.view_onclick_action)).equals("camera")){
-        	//  launch CameraActivity
-        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
-        	intent.putExtra("timelapse_id", (Integer)v.getTag(R.id.view_related_timelapse));
-            startActivity(intent);
-        }
-        else if(((String)v.getTag(R.id.view_onclick_action)).equals("view")){
-        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
-        	intent.putExtra("timelapse_id", (Integer)v.getTag(R.id.view_related_timelapse));
-            startActivity(intent);
-        }
-    }
-    */
+    public OnItemClickListener listItemClickListener = new OnItemClickListener(){
+
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position,
+				long id) {
+			if(((String)view.getTag(R.id.view_onclick_action)).equals("camera")){
+	        	//  launch CameraActivity
+	        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
+	        	intent.putExtra("timelapse_id", (Integer)view.getTag(R.id.view_related_timelapse));
+	            startActivity(intent);
+	        }
+	        else if(((String)view.getTag(R.id.view_onclick_action)).equals("view")){
+	        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
+	        	intent.putExtra("timelapse_id", (Integer)view.getTag(R.id.view_related_timelapse));
+	            startActivity(intent);
+	        }
+			
+		}
+    	
+    };
     
     // Populate ActionBar
     @Override
@@ -271,7 +259,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
  // Creates a new loader after the initLoader () call
  	@Override
  	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
- 		String[] projection = { SQLiteWrapper.COLUMN_ID, SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION, SQLiteWrapper.COLUMN_THUMBNAIL_PATH };
+ 		String[] projection = { SQLiteWrapper.COLUMN_ID, SQLiteWrapper.COLUMN_TIMELAPSE_ID, SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION, SQLiteWrapper.COLUMN_THUMBNAIL_PATH };
  		CursorLoader cursorLoader = new CursorLoader(this,
  				TimeLapseContentProvider.CONTENT_URI, projection, null, null, null);
  		return cursorLoader;
@@ -279,7 +267,10 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 
  	@Override
  	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
- 		Log.d("onLoadFinished", String.valueOf(data.getCount()));
+ 		Log.d("onLoadFinished", data.getColumnNames().toString());
+ 		if(data.getCount() != 0){
+ 			empty.setVisibility(View.GONE);
+ 		}
  		adapter.swapCursor(data);
  	}
 

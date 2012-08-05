@@ -2,9 +2,15 @@ package pro.dbro.timelapse;
 
 import java.util.ArrayList;
 
+import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -12,19 +18,17 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 
-import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-
-public class TimeLapseViewerActivity extends SherlockActivity {
+public class TimeLapseViewerActivity extends Activity {
 	
 	private TimeLapseApplication tla;
+	
 	private EditText title;
 	private EditText description;
 	private Button actionButton;
 	
 	private int timelapse_id = -1;
+	
+	private Cursor mCursor;
 
 	/** Called when the activity is first created. */
     @Override
@@ -39,21 +43,27 @@ public class TimeLapseViewerActivity extends SherlockActivity {
         description = (EditText) findViewById(R.id.create_timelapse_description);
         actionButton =  (Button) findViewById(R.id.create_timelapse_button);
         
-        tla = (TimeLapseApplication)getApplicationContext();
+        tla = (TimeLapseApplication)this.getApplicationContext();
         
         Intent intent = getIntent();
-        
         timelapse_id = intent.getExtras().getInt("timelapse_id");
+
         Log.d("TimeLapseViewerActivity", "TL id : " + String.valueOf(timelapse_id));
+        
         if(timelapse_id == -1){
         	// new timelapse
         	actionButton.setVisibility(View.VISIBLE);
         	actionButton.setOnClickListener(createTimeLapseListener);
         }
         else{
-        	if(tla.time_lapse_map.containsKey(timelapse_id)){
-        		title.setText(((TimeLapse)tla.time_lapse_map.get(timelapse_id)).name);
-            	description.setText(((TimeLapse)tla.time_lapse_map.get(timelapse_id)).description);
+        	// Query ContentResolver for related timelapse
+            String mSelectionClause = SQLiteWrapper.COLUMN_TIMELAPSE_ID + " = ?";
+            String[] mSelectionArgs = {String.valueOf(timelapse_id)};
+            
+            Cursor cursor = tla.getTimeLapseById(timelapse_id, null);
+        	if(cursor.moveToFirst()){
+        		title.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_NAME)));
+        		description.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DESCRIPTION)));
             	actionButton.setText(getString(R.string.save_timelapse_button));
             	actionButton.setVisibility(View.VISIBLE);
             	actionButton.setOnClickListener(saveTimeLapseListener);
@@ -72,7 +82,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
     // Populate ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.layout.timelapse_viewer_menu, menu);
         return true;
     }
@@ -101,6 +111,11 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 				return;
 			}
 			else{
+				tla.updateTimeLapseById(timelapse_id, new String[] {SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION }, 
+													  new String[] {title.getText().toString(), description.getText().toString()});
+				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
+                startActivity(intent);
+				/*
 				if(tla.time_lapse_map.containsKey(timelapse_id)){
 		    		tla.setTimeLapseTitleAndDescription(timelapse_id, title.getText().toString(), description.getText().toString());
 		    		//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
@@ -109,7 +124,7 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 					// Signal BrowserActivity to update ListView
 					//intent.putExtra("updateListView", true);
 	                startActivity(intent);
-		    	}
+		    	}*/
 			}	
 		}
     };
@@ -123,7 +138,9 @@ public class TimeLapseViewerActivity extends SherlockActivity {
 				return;
 			}
 			else{
-				tla.createTimeLapse(title.getText().toString(), description.getText().toString());
+				tla.createTimeLapse(new String[]{title.getText().toString(), description.getText().toString()},
+									new String[]{SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION});
+				//tla.createTimeLapse(title.getText().toString(), description.getText().toString());
 				//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
 				Log.d("TimeLapse Created",title.getText().toString() + " " + description.getText().toString());
 				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);

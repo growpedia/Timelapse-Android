@@ -5,7 +5,11 @@ import java.util.HashMap;
 import java.util.Set;
 
 import android.app.Application;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
 
 public class TimeLapseApplication extends Application {
@@ -57,5 +61,67 @@ public class TimeLapseApplication extends Application {
 		// add a 1 to it
 		nextTimeLapseId++;
 		Log.d("TimeLapseApplication","nextID: " + String.valueOf(nextTimeLapseId));
+	}
+	
+	
+	/**
+	 * Content Resolver Wrapper methods
+	 */
+	
+	public Cursor getTimeLapseById(int timelapse_id, String[] columns){
+		// Query ContentResolver for related timelapse
+        String SelectionClause = SQLiteWrapper.COLUMN_TIMELAPSE_ID + " = ?";
+        String[] SelectionArgs = {String.valueOf(timelapse_id)};
+        
+        // If no columns provided, return all
+        if(columns == null)
+        	columns = SQLiteWrapper.COLUMNS;
+        
+       return getContentResolver().query(
+        	    TimeLapseContentProvider.CONTENT_URI,  // The content URI of the words table
+        	    columns,                // The columns to return for each row
+        	    SelectionClause,                    // Selection criteria
+        	    SelectionArgs,                     // Selection criteria
+        	    null);                        	   // The sort order for the returned rows
+	}
+	
+	public boolean updateTimeLapseById(int timelapse_id, String[] columns, String[] values){
+		//public int update(Uri uri, ContentValues values, String selection,
+		//		String[] selectionArgs) {
+		String selectionClause = SQLiteWrapper.COLUMN_TIMELAPSE_ID + " = ?";
+		String[] selectionArgs = {String.valueOf(timelapse_id)};
+		
+		ContentValues contentValues = new ContentValues();
+		for(int x=0;x<columns.length;x++){
+			contentValues.put(columns[x], values[x]);
+		}
+		
+		int numUpdated = getContentResolver().update(
+				TimeLapseContentProvider.CONTENT_URI, 
+				contentValues, 
+				selectionClause, 
+				selectionArgs);
+		
+		if(numUpdated > 0)
+			return true;
+		else
+			return false;
+	}
+	
+	public boolean createTimeLapse(String[] columns, String[] values){
+		ContentValues contentValues = new ContentValues();
+		for(int x=0;x<columns.length;x++){
+			contentValues.put(columns[x], values[x]);
+		}
+		
+		int next_timelapse_id = 1;
+		Cursor cursor = getContentResolver().query(TimeLapseContentProvider.CONTENT_URI, new String[] {SQLiteWrapper.COLUMN_ID}, null, null, SQLiteWrapper.COLUMN_TIMELAPSE_ID + "DESC");
+		if(cursor.moveToFirst()){
+			next_timelapse_id = cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_TIMELAPSE_ID)) + 1;
+		}
+
+		contentValues.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, String.valueOf(next_timelapse_id));
+		getContentResolver().insert(TimeLapseContentProvider.CONTENT_URI, contentValues);
+		return true;
 	}
 }
