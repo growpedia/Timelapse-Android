@@ -267,9 +267,12 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 
  	@Override
  	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
- 		Log.d("onLoadFinished", data.getColumnNames().toString());
+ 		Log.d("onLoadFinished", String.valueOf(data.getCount()));
  		if(data.getCount() != 0){
  			empty.setVisibility(View.GONE);
+ 		}
+ 		else{
+ 			empty.setText("No TimeLapses Found");
  		}
  		adapter.swapCursor(data);
  	}

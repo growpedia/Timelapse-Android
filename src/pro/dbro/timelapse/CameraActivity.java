@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
@@ -127,8 +128,19 @@ public class CameraActivity extends Activity {
         
         timelapse_id = intent.getExtras().getInt("timelapse_id");
         
-        if(c.time_lapse_map.get(timelapse_id).last_image_path != null)
-        	setCameraOverlay(c.time_lapse_map.get(timelapse_id).last_image_path);
+        Cursor timelapse_cursor = c.getTimeLapseById(timelapse_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
+        if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
+        	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
+        		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
+        	}
+        }
+        
+        
+        //Log.d("CameraActivity", String.valueOf(timelapse_cursor.isNull(timelapse_cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))));
+        //Log.d("CameraActivity","lastImagePath: " +  timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
+        		
+        //if(c.time_lapse_map.get(timelapse_id).last_image_path != null)
+        //	setCameraOverlay(c.time_lapse_map.get(timelapse_id).last_image_path);
     	
     }
 

@@ -138,8 +138,8 @@ public class TimeLapseViewerActivity extends Activity {
 				return;
 			}
 			else{
-				tla.createTimeLapse(new String[]{title.getText().toString(), description.getText().toString()},
-									new String[]{SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION});
+				tla.createTimeLapse(new String[]{SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION},
+									new String[]{title.getText().toString(), description.getText().toString()});
 				//tla.createTimeLapse(title.getText().toString(), description.getText().toString());
 				//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
 				Log.d("TimeLapse Created",title.getText().toString() + " " + description.getText().toString());
