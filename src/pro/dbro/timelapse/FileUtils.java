@@ -10,12 +10,21 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import android.content.ContentValues;
 import android.content.Intent;
@@ -52,19 +61,18 @@ public class FileUtils {
 	    // To be safe, you should check that the SDCard is mounted
 	    // using Environment.getExternalStorageState() before doing this.
 
-		// /mnt/sdcard/TimeLapse
-	    File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+		
 	    // /mnt/sdcard/TimeLapse/x
-	    mediaStorageDir = new File(mediaStorageDir, String.valueOf(timelapse_id));
+	    File media_dir = new File(mediaStorageDir, String.valueOf(timelapse_id));
 
 	    // Create the storage directory if it does not exist
-	    if (! mediaStorageDir.exists()){
-	        if (! mediaStorageDir.mkdirs()){
+	    if (! media_dir.exists()){
+	        if (! media_dir.mkdirs()){
 	            Log.d(TAG, "failed to create directory");
 	            return null;
 	        }
 	    }
-	    return mediaStorageDir;
+	    return media_dir;
 	}
 
 	/** Create a File for saving an image or video 
@@ -73,16 +81,7 @@ public class FileUtils {
 	    // To be safe, you should check that the SDCard is mounted
 	    // using Environment.getExternalStorageState() before doing this.
 
-	    // /mnt/sdcard/TimeLapse/x
-	    File result = new File(mediaStorageDir, String.valueOf(timelapse_id));
-
-	    // Create the storage directory if it does not exist
-	    if (! mediaStorageDir.exists()){
-	        if (! mediaStorageDir.mkdirs()){
-	            Log.d(TAG, "failed to create directory");
-	            return null;
-	        }
-	    }
+	    File timelapse_directory = getOutputMediaDir(timelapse_id);
 
 	    // Create a media file name
 	    //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -92,10 +91,10 @@ public class FileUtils {
 	    
 	    File mediaFile;
 	    if (type == MEDIA_TYPE_IMAGE){
-	        mediaFile = new File(mediaStorageDir.getPath() + File.separator + 
+	        mediaFile = new File(timelapse_directory + File.separator + 
 	        String.valueOf(image_count+=1) + ".jpeg");
 	    } else if(type == MEDIA_TYPE_VIDEO) {
-	        mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+	        mediaFile = new File(timelapse_directory + File.separator +
 	        String.valueOf(image_count+=1) + ".mp4");
 	    } else {
 	        return null;
@@ -139,7 +138,7 @@ public class FileUtils {
 				Log.d(TAG,"TimeLapse directory found!");
 			
 			ContentValues file_content;
-			Gson gson = new Gson();
+			Gson gson = new GsonBuilder().registerTypeAdapter(ContentValues.class, new FileUtils.TimeLapseDeserializer()).create();
 			for (File child : dir.listFiles()) {
 				Log.d(TAG,"Inspecing child: " + child.getAbsolutePath());
 				if (!child.isDirectory() || ".".equals(child.getName()) || "..".equals(child.getName())) {
@@ -158,7 +157,7 @@ public class FileUtils {
 						
 						// count images in directory
 						if (child.listFiles(FileUtils.mImageFilter) != null && child.listFiles(FileUtils.mImageFilter).length != 0){
-							findOrGenerateThumbnail(file_content);	
+							file_content = findOrGenerateThumbnail(file_content);	
 						}
 						else
 							file_content.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, 0);
@@ -229,7 +228,7 @@ public class FileUtils {
 			
 			File timelapse_meta = new File(timelapse_dir, METADATA_FILENAME);
 			//Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(new TimeLapse.JsonExclusionStrategy()).create();
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			Gson gson = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(ContentValues.class, new FileUtils.TimeLapseSerializer()).create();
 			
 			try {
 				// Overwrite the metadata.json file
@@ -321,7 +320,7 @@ public class FileUtils {
 		        //tl.image_count ++;
 		        
 		        // Generate a thumbnail for this new picture
-		        findOrGenerateThumbnail(tl);
+		        tl = findOrGenerateThumbnail(tl);
 		        
 		        // TODO: Save new thumb, image to db OR do it in SaveTimeLapse
 		        Log.d("SavePicture",tl.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
@@ -397,7 +396,7 @@ public class FileUtils {
 	
 	// Generate a thumbnail given an original, and set TimeLapse.thumbnail_path
 	// if thumbnail matching last image in TimeLapse exists, set TimeLapse.thumbnail_path 
-	public static void findOrGenerateThumbnail(ContentValues timelapse){
+	public static ContentValues findOrGenerateThumbnail(ContentValues timelapse){
 		
 		File timelapse_dir = new File(timelapse.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
 		
@@ -405,14 +404,14 @@ public class FileUtils {
 		// fixing the application state is beyond the scope of this method
 		// TODO: for performance, remove this check 
 		if(!timelapse_dir.exists() || timelapse_dir.isFile())
-			return;
+			return timelapse;
 		
 		// Make thumbnail folder if it doesn't exist
 		File thumbnail_dir = new File(timelapse_dir, TimeLapse.thumbnail_dir);
 	    if (! thumbnail_dir.exists()){
 	        if (! thumbnail_dir.mkdirs()){
 	            Log.d(TAG, "failed to create thumbnail directory");
-	            return;
+	            return timelapse;
 	        }
 	    }
 	    // Determine last image in TimeLapse dir and generate thumbnail if it doesn't exist
@@ -441,6 +440,8 @@ public class FileUtils {
 			//if thumbail exists, store it with TimeLapse
 			timelapse.put(SQLiteWrapper.COLUMN_THUMBNAIL_PATH, thumbnail_file.getAbsolutePath());
 		}
+		
+		return timelapse;
 	}
 	
 	// Check that file has extension = ".jpeg"
@@ -467,6 +468,41 @@ public class FileUtils {
 	}
 	
 	public static imageFilter mImageFilter = new imageFilter();
+	
+	public static class TimeLapseSerializer implements JsonSerializer<ContentValues> {
+		  public JsonElement serialize(ContentValues src, Type typeOfSrc, JsonSerializationContext context) {
+			  JsonObject result = new JsonObject();
+			  result.addProperty("creation_date", src.getAsString(SQLiteWrapper.COLUMN_CREATION_DATE));
+			  result.addProperty("name", src.getAsString(SQLiteWrapper.COLUMN_NAME));
+			  result.addProperty("description", src.getAsString(SQLiteWrapper.COLUMN_DESCRIPTION));
+			  result.addProperty("modified_date", src.getAsString(SQLiteWrapper.COLUMN_MODIFIED_DATE));
+			  result.addProperty("id", src.getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
+			  result.addProperty("image_count", src.getAsInteger(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+		    return result;
+		  }
+	}
+	
+	public static class TimeLapseDeserializer implements JsonDeserializer<ContentValues>{
+	
+		public ContentValues deserialize(JsonElement json, Type type,
+		        JsonDeserializationContext context) throws JsonParseException {
+	
+		    JsonObject jsonObject = (JsonObject) json;
+		    ContentValues result = new ContentValues();
+		    try{
+			    result.put(SQLiteWrapper.COLUMN_CREATION_DATE, jsonObject.get("creation_date").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_NAME, jsonObject.get("name").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_DESCRIPTION, jsonObject.get("description").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, jsonObject.get("modified_date").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, jsonObject.get("image_count").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, jsonObject.get("id").getAsString());
+		    }
+		    catch(Throwable t){
+		    	throw new JsonParseException(t);
+		    }
+		    return result;
+		}
+	}
 
 
 }

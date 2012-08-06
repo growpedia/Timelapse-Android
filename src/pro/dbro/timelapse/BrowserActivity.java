@@ -66,7 +66,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         
         // Load Timelapses from external storage
         //Log.d("OnCreate","Beginning filesystem read");
-        //new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+        new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
  
         getSupportLoaderManager().initLoader(0, null, this);
         adapter = new TimeLapseCursorAdapter(this, null);
@@ -169,6 +169,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
     	  public void onReceive(Context context, Intent intent) {
     	    // Populate ListView with received data
     		  int type = intent.getIntExtra("type", -1);
+    		  /*
     		if(type != -1){
     			if(type == R.id.filesystem_parse_complete){
 		    		//Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
@@ -204,7 +205,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 	    	    	    ((ImageView)browser_list_item.findViewById(R.id.list_item_image)).setImageBitmap(thumb_bitmap);
     				}
     			}
-    		}
+    		}*/
     	  }
     };
     
@@ -272,7 +273,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
  			empty.setVisibility(View.GONE);
  		}
  		else{
- 			empty.setText("No TimeLapses Found");
+ 			empty.setText(R.string.no_timelapses_found);
  		}
  		adapter.swapCursor(data);
  	}
