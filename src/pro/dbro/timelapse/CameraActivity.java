@@ -43,8 +43,8 @@ public class CameraActivity extends Activity {
 	// see getOptimalPreviewSize()
 	private static Size optimalSize;
 	
-	// Determine whether or not to update ListView onPause
-	public static Boolean picture_taken;
+	// Determines whether the shutter listener is active
+	public static Boolean taking_picture = false;
 	
 	// ImageView overlayed on the Camera preview
 	private static ImageView cameraOverlay;
@@ -67,9 +67,7 @@ public class CameraActivity extends Activity {
 
         // Obtain camera instance
         mCamera = getCameraInstance();
-        
-        picture_taken = false;
-        
+                
         if (mCamera == null){
         	showCameraErrorDialog();
         }
@@ -155,7 +153,10 @@ public class CameraActivity extends Activity {
 				// Called by Camera when a picture's data is ready for processing
 				// Restart Camera preview after snapping, and set just-captured photo as overlay
 				//TimeLapsePictureCallback tlpc = CameraUtils.TimeLapsePictureCallback(timelapse_id);
-				mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(timelapse_id));
+				if(!taking_picture){
+					taking_picture = true;
+					mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(timelapse_id));
+				}
 				// Consume touch event
 				return true;
             }

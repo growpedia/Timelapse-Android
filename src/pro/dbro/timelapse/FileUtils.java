@@ -338,6 +338,7 @@ public class FileUtils {
 				//sendMessage(result);
 				super.onPostExecute(result);
 				CameraActivity.setCameraOverlay(result);
+				CameraActivity.taking_picture = false;
 		    }
 			
 		}
