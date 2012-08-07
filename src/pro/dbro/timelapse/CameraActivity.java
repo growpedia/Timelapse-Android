@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
@@ -42,8 +43,8 @@ public class CameraActivity extends Activity {
 	// see getOptimalPreviewSize()
 	private static Size optimalSize;
 	
-	// Determine whether or not to update ListView onPause
-	public static Boolean picture_taken;
+	// Determines whether the shutter listener is active
+	public static Boolean taking_picture = false;
 	
 	// ImageView overlayed on the Camera preview
 	private static ImageView cameraOverlay;
@@ -66,9 +67,7 @@ public class CameraActivity extends Activity {
 
         // Obtain camera instance
         mCamera = getCameraInstance();
-        
-        picture_taken = false;
-        
+                
         if (mCamera == null){
         	showCameraErrorDialog();
         }
@@ -127,8 +126,19 @@ public class CameraActivity extends Activity {
         
         timelapse_id = intent.getExtras().getInt("timelapse_id");
         
-        if(c.time_lapse_map.get(timelapse_id).last_image_path != null)
-        	setCameraOverlay(c.time_lapse_map.get(timelapse_id).last_image_path);
+        Cursor timelapse_cursor = c.getTimeLapseById(timelapse_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
+        if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
+        	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
+        		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
+        	}
+        }
+        
+        
+        //Log.d("CameraActivity", String.valueOf(timelapse_cursor.isNull(timelapse_cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))));
+        //Log.d("CameraActivity","lastImagePath: " +  timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
+        		
+        //if(c.time_lapse_map.get(timelapse_id).last_image_path != null)
+        //	setCameraOverlay(c.time_lapse_map.get(timelapse_id).last_image_path);
     	
     }
 
@@ -143,7 +153,10 @@ public class CameraActivity extends Activity {
 				// Called by Camera when a picture's data is ready for processing
 				// Restart Camera preview after snapping, and set just-captured photo as overlay
 				//TimeLapsePictureCallback tlpc = CameraUtils.TimeLapsePictureCallback(timelapse_id);
-				mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(timelapse_id));
+				if(!taking_picture){
+					taking_picture = true;
+					mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(timelapse_id));
+				}
 				// Consume touch event
 				return true;
             }
