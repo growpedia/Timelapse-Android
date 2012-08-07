@@ -6,6 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 // Gotcha! By default, annotations are not available at runtime
 // you've gotta explicitly set RetentionPolicy.RUNTIME
 @Retention(RetentionPolicy.RUNTIME)
-public @interface NotForExport {
+public @interface NotForDatabase {
 
 }

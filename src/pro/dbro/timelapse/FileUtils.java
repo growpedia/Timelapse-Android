@@ -10,15 +10,24 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
+import android.content.ContentValues;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -37,67 +46,56 @@ public class FileUtils {
 	// Directory within /sdcard where pictures are saved
 	public static final String MEDIA_DIRECTORY = "TimeLapse";
 	
+	// File representing MEDIA_DIRECTORY path
+	public static final File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+	
 	// TAG to associate with all debug logs originating from this class
 	private static final String TAG = "FileUtils";
 
 	/** Create a file Uri for saving an image or video */
-	public static Uri getOutputMediaFileUri(int timelapse_id, int type){
-	      return Uri.fromFile(getOutputMediaFile(timelapse_id, type));
+	public static Uri getOutputMediaFileUri(int timelapse_id, int type, int image_count){
+	      return Uri.fromFile(getOutputMediaFile(timelapse_id, type, image_count));
 	}
 	
 	public static File getOutputMediaDir(int timelapse_id){
 	    // To be safe, you should check that the SDCard is mounted
 	    // using Environment.getExternalStorageState() before doing this.
 
-		// /mnt/sdcard/TimeLapse
-	    File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+		
 	    // /mnt/sdcard/TimeLapse/x
-	    mediaStorageDir = new File(mediaStorageDir, String.valueOf(timelapse_id));
+	    File media_dir = new File(mediaStorageDir, String.valueOf(timelapse_id));
 
 	    // Create the storage directory if it does not exist
-	    if (! mediaStorageDir.exists()){
-	        if (! mediaStorageDir.mkdirs()){
+	    if (! media_dir.exists()){
+	        if (! media_dir.mkdirs()){
 	            Log.d(TAG, "failed to create directory");
 	            return null;
 	        }
 	    }
-	    return mediaStorageDir;
+	    return media_dir;
 	}
 
 	/** Create a File for saving an image or video 
 	 *  Assumes timelapse_id is validated	*/
-	public static File getOutputMediaFile(int timelapse_id, int type){
+	public static File getOutputMediaFile(int timelapse_id, int type, int image_count){
 	    // To be safe, you should check that the SDCard is mounted
 	    // using Environment.getExternalStorageState() before doing this.
 
-		// /mnt/sdcard/TimeLapse
-	    File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
-	    // /mnt/sdcard/TimeLapse/x
-	    mediaStorageDir = new File(mediaStorageDir, String.valueOf(timelapse_id));
-
-	    // Create the storage directory if it does not exist
-	    if (! mediaStorageDir.exists()){
-	        if (! mediaStorageDir.mkdirs()){
-	            Log.d(TAG, "failed to create directory");
-	            return null;
-	        }
-	    }
+	    File timelapse_directory = getOutputMediaDir(timelapse_id);
 
 	    // Create a media file name
 	    //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 	    // get tla.timelapse_map(timelapse_id).image_count + 1
 	    
-	    // Get next image name from TimeLapse.image_count, and increment image_count
-	    TimeLapseApplication tla = BrowserActivity.getContext();
-	    int int_image = ((TimeLapse)tla.time_lapse_map.get(timelapse_id)).image_count + 1;
+	    //int int_image = ((TimeLapse)tla.time_lapse_map.get(timelapse_id)).image_count + 1;
 	    
 	    File mediaFile;
 	    if (type == MEDIA_TYPE_IMAGE){
-	        mediaFile = new File(mediaStorageDir.getPath() + File.separator + 
-	        String.valueOf(int_image) + ".jpeg");
+	        mediaFile = new File(timelapse_directory + File.separator + 
+	        String.valueOf(image_count+=1) + ".jpeg");
 	    } else if(type == MEDIA_TYPE_VIDEO) {
-	        mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-	        String.valueOf(int_image) + ".mp4");
+	        mediaFile = new File(timelapse_directory + File.separator +
+	        String.valueOf(image_count+=1) + ".mp4");
 	    } else {
 	        return null;
 	    }
@@ -108,14 +106,18 @@ public class FileUtils {
 	// Read application state from filesystem in a separate thread
 	// Argument: String root filepath to search
 	// Returns: ArrayList of TimeLapses corresponding to filepath contents
-	public static class ParseTimeLapsesFromFilesystem extends AsyncTask<String, Void, ArrayList<TimeLapse>>{
+	public static class ParseTimeLapsesFromFilesystem extends AsyncTask<String, Void, Boolean>{
 		private String TAG = "ParseTimeLapseFromFilesystem"; //  for debug
+		
+		public ParseTimeLapsesFromFilesystem(){
+			super();
+		}
 
 		// This method is executed in a separate thread
 		@Override
-		protected ArrayList<TimeLapse> doInBackground(String... filePath) {
-			
-			ArrayList<TimeLapse> result = new ArrayList<TimeLapse>();
+		protected Boolean doInBackground(String... filePath) {
+			TimeLapseApplication tla = BrowserActivity.getContext();
+
 			// For now, hardcode filePath directory
 			//File dir = new File(filePath[0]);
 			File dir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
@@ -124,18 +126,19 @@ public class FileUtils {
 			// TODO: Prompt user for action
 			if(dir.exists() && !dir.isDirectory()){
 				Log.d(TAG,"Filename collision with TimeLapse directory");
-				return result;
+				return false;
 			}
 			else if(!dir.exists()){
 				// The TimeLapse root directory didn't exist
 				Log.d(TAG,"Creating TimeLapse directory");
 				dir.mkdir();
-				return result;
+				return false;
 			}
 			else
 				Log.d(TAG,"TimeLapse directory found!");
 			
-			TimeLapse temp;
+			ContentValues file_content;
+			Gson gson = new GsonBuilder().registerTypeAdapter(ContentValues.class, new FileUtils.TimeLapseDeserializer()).create();
 			for (File child : dir.listFiles()) {
 				Log.d(TAG,"Inspecing child: " + child.getAbsolutePath());
 				if (!child.isDirectory() || ".".equals(child.getName()) || "..".equals(child.getName())) {
@@ -148,27 +151,29 @@ public class FileUtils {
 				if (metadata.exists()){
 					Log.d(TAG,"Metadata found");
 					try{
-						Gson gson = new Gson();
 						// automatically deserialize JSON attributes matching TimeLapse fields
-						temp = gson.fromJson(fileToString(metadata), TimeLapse.class);
+						file_content = gson.fromJson(fileToString(metadata), ContentValues.class);
 						// manually assign other attributes
 						
 						// count images in directory
 						if (child.listFiles(FileUtils.mImageFilter) != null && child.listFiles(FileUtils.mImageFilter).length != 0){
-							findOrGenerateThumbnail(temp);	
+							file_content = findOrGenerateThumbnail(file_content);	
 						}
 						else
-							temp.image_count = 0;
-						Log.d(TAG, String.valueOf(temp.image_count) + " images found");
+							file_content.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, 0);
+						//Log.d(TAG, String.valueOf(file_content.image_count) + " images found");
 						// set directory path
-						temp.directory_path = child.getPath();
+						file_content.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, child.getPath());
 						// assign id based on dir name
-						temp.id = Integer.parseInt(child.getName());
-						result.add(temp);
+						file_content.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, child.getName());
+
+						// Add timelapse to the TimeLapseContentProvider
+						tla.updateOrInsertTimeLapseByContentValues(file_content);
 						Log.d(TAG,"Successfully parsed timelapse");
 					}
 					catch(Throwable t){
-						Log.d(TAG,t.getLocalizedMessage());
+						Log.d(TAG,""+ t.toString());
+						//Log.d(TAG,t.getLocalizedMessage());
 					}
 				}
 				else{
@@ -177,16 +182,17 @@ public class FileUtils {
 				}
 		   
 		    }
-			return result;
+			return true;
 		}
 		
 		@Override
-	    protected void onPostExecute(ArrayList<TimeLapse> result) {
+	    protected void onPostExecute(Boolean result) {
+			
 			sendMessage(result);
 	        super.onPostExecute(result);
 	    }
 		
-		private void sendMessage(ArrayList<TimeLapse> result) {
+		private void sendMessage(Boolean result) {
 		  	  Intent intent = new Intent(String.valueOf(R.id.browserActivity_message));
 		  	  intent.putExtra("result", result);
 		  	  intent.putExtra("type", R.id.filesystem_parse_complete);
@@ -198,11 +204,16 @@ public class FileUtils {
 	
 	// Given a TimeLapse object, save it's representation on the filesystem
 	// Returns True if successful, False otherwise
-	public static class SaveTimeLapsesOnFilesystem extends AsyncTask<TimeLapse, Void, Integer>{
+	/**
+	 * Serialize given ContentValues to Json, and write that to the filesystem
+	 * @author davidbrodsky
+	 *
+	 */
+	public static class SaveTimeLapsesOnFilesystem extends AsyncTask<ContentValues, Void, ContentValues>{
 	
 		// This method is executed in a separate thread
 		@Override
-		protected Integer doInBackground(TimeLapse... input) {
+		protected ContentValues doInBackground(ContentValues... input) {
 			/*
 			File timelapse_root = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
 			if(!timelapse_root.isDirectory())
@@ -211,10 +222,13 @@ public class FileUtils {
 			if(!timelapse_dir.exists())
 				return false;
 				*/
-			File timelapse_dir = getOutputMediaDir(input[0].id);
+			//File timelapse_dir = getOutputMediaDir(input[0].getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
+			File timelapse_dir = new File(input[0].getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+			
 			
 			File timelapse_meta = new File(timelapse_dir, METADATA_FILENAME);
-			Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(new TimeLapse.JsonExclusionStrategy()).create();
+			//Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(new TimeLapse.JsonExclusionStrategy()).create();
+			Gson gson = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(ContentValues.class, new FileUtils.TimeLapseSerializer()).create();
 			
 			try {
 				// Overwrite the metadata.json file
@@ -227,17 +241,18 @@ public class FileUtils {
 				e.printStackTrace();
 				Log.d("CreateTimeLapseOnFileSystem", "writing failed:");
 			}
-			return input[0].id;
+			Log.d("TimeLapse Saved", input[0].getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+			return input[0];
 		}
 		
 		@Override
-	    protected void onPostExecute(Integer result) {
+	    protected void onPostExecute(ContentValues result) {
 			// Don't need to send a message indicating this is complete
-			sendMessage(result);
+			//sendMessage(result);
 	        super.onPostExecute(result);
 	    }
 		
-		private void sendMessage(Integer result) {
+		private void sendMessage(ContentValues result) {
 		  	  Intent intent = new Intent(String.valueOf(R.id.browserActivity_message));
 		  	  intent.putExtra("timelapse_id", result);
 		  	  intent.putExtra("type", R.id.filesystem_modified);
@@ -264,7 +279,16 @@ public class FileUtils {
 					Log.d(TAG,"Error: no timelapse_id given");
 					return "";
 				}
-				File pictureFile = FileUtils.getOutputMediaFile(timelapse_id, FileUtils.MEDIA_TYPE_IMAGE);
+				
+				TimeLapseApplication tla = BrowserActivity.getContext();
+		        ContentValues tl = SQLiteWrapper.cursorRowToContentValues(tla.getTimeLapseById(timelapse_id, null));
+		        Log.d("TimeLapse Retrieved in SavePicture", tl.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+		        File pictureFile;
+		        if(tl.containsKey(SQLiteWrapper.COLUMN_IMAGE_COUNT))
+		        	pictureFile = FileUtils.getOutputMediaFile(timelapse_id, FileUtils.MEDIA_TYPE_IMAGE, tl.getAsInteger(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+		        else
+		        	pictureFile = FileUtils.getOutputMediaFile(timelapse_id, FileUtils.MEDIA_TYPE_IMAGE, 0);
+		        
 		        if (pictureFile == null){
 		            Log.d(TAG, "Error creating media file, check storage permissions");
 		            return "";
@@ -283,13 +307,25 @@ public class FileUtils {
 		        
 		        // Picture is now written to Filesystem
 		        // set TimeLapse image_count and modified_date
-		        TimeLapseApplication tla = BrowserActivity.getContext();
-		        TimeLapse tl = ((TimeLapseApplication)tla).time_lapse_map.get(timelapse_id);
-		        tl.modified_date = new Date();
-		        tl.image_count ++;
+		        
+		        int num_images;
+		        if(tl.containsKey(SQLiteWrapper.COLUMN_IMAGE_COUNT))
+		        	num_images = tl.getAsInteger(SQLiteWrapper.COLUMN_IMAGE_COUNT);
+		        else
+		        	num_images = 0;
+		        
+		        
+		        //TimeLapse tl = ((TimeLapseApplication)tla).time_lapse_map.get(timelapse_id);
+		        //tl.modified_date = new Date();
+		        //tl.image_count ++;
 		        
 		        // Generate a thumbnail for this new picture
-		        findOrGenerateThumbnail(tl);
+		        tl = findOrGenerateThumbnail(tl);
+		        
+		        // TODO: Save new thumb, image to db OR do it in SaveTimeLapse
+		        Log.d("SavePicture",tl.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+		        tla.updateTimeLapseById(timelapse_id, new String[]{SQLiteWrapper.COLUMN_MODIFIED_DATE,  SQLiteWrapper.COLUMN_IMAGE_COUNT, SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, SQLiteWrapper.COLUMN_THUMBNAIL_PATH},
+		        									  new String[]{new Date().toString(), String.valueOf(num_images+=1), tl.getAsString(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH), tl.getAsString(SQLiteWrapper.COLUMN_THUMBNAIL_PATH)});
 				
 		        // Save the new metadata.json reflecting the recently taken picture
 		        new FileUtils.SaveTimeLapsesOnFilesystem().execute(tl);
@@ -302,6 +338,7 @@ public class FileUtils {
 				//sendMessage(result);
 				super.onPostExecute(result);
 				CameraActivity.setCameraOverlay(result);
+				CameraActivity.taking_picture = false;
 		    }
 			
 		}
@@ -360,39 +397,39 @@ public class FileUtils {
 	
 	// Generate a thumbnail given an original, and set TimeLapse.thumbnail_path
 	// if thumbnail matching last image in TimeLapse exists, set TimeLapse.thumbnail_path 
-	public static void findOrGenerateThumbnail(TimeLapse timelapse){
+	public static ContentValues findOrGenerateThumbnail(ContentValues timelapse){
 		
-		File timelapse_dir = new File(timelapse.directory_path);
+		File timelapse_dir = new File(timelapse.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
 		
 		// if the timelapse dir does not exist or is a file,
 		// fixing the application state is beyond the scope of this method
 		// TODO: for performance, remove this check 
 		if(!timelapse_dir.exists() || timelapse_dir.isFile())
-			return;
+			return timelapse;
 		
 		// Make thumbnail folder if it doesn't exist
 		File thumbnail_dir = new File(timelapse_dir, TimeLapse.thumbnail_dir);
 	    if (! thumbnail_dir.exists()){
 	        if (! thumbnail_dir.mkdirs()){
 	            Log.d(TAG, "failed to create thumbnail directory");
-	            return;
+	            return timelapse;
 	        }
 	    }
 	    // Determine last image in TimeLapse dir and generate thumbnail if it doesn't exist
 		File[] children = timelapse_dir.listFiles(new imageFilter());
-		timelapse.image_count = timelapse_dir.listFiles(new imageFilter()).length;
+		timelapse.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, timelapse_dir.listFiles(new imageFilter()).length);
 		// Generate thumbnail of last image and save to storage as "./thumbnail_dir/XXXthumbnail_suffix.jpeg"
-		File original = new File(timelapse_dir,String.valueOf(timelapse.image_count)+".jpeg");
-		timelapse.last_image_path = original.getAbsolutePath();
+		File original = new File(timelapse_dir, timelapse.getAsString(SQLiteWrapper.COLUMN_IMAGE_COUNT) + ".jpeg");
+		timelapse.put(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, original.getAbsolutePath()); 
 		Bitmap thumbnail_bitmap = FileUtils.decodeSampledBitmapFromResource(original.getAbsolutePath(), TimeLapse.thumbnail_width, TimeLapse.thumbnail_height);
-		File thumbnail_file = new File(thumbnail_dir, String.valueOf(timelapse.image_count)+ TimeLapse.thumbnail_suffix +".jpeg");
+		File thumbnail_file = new File(thumbnail_dir, timelapse.getAsString(SQLiteWrapper.COLUMN_IMAGE_COUNT)+ TimeLapse.thumbnail_suffix +".jpeg");
 		if(!thumbnail_file.exists()){
 			FileOutputStream out;
 			try {
 				out = new FileOutputStream(thumbnail_file);
 				thumbnail_bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
-				timelapse.thumbnail_path = thumbnail_file.getAbsolutePath();
-				Log.d("Thumbnail","TL " + String.valueOf(timelapse.id) + " thumb set to " + timelapse.thumbnail_path);
+				timelapse.put(SQLiteWrapper.COLUMN_THUMBNAIL_PATH, thumbnail_file.getAbsolutePath()); 
+				//Log.d("Thumbnail","TL " + String.valueOf(timelapse.id) + " thumb set to " + timelapse.thumbnail_path);
 			} catch (FileNotFoundException e) {
 				// Not sure when this would happen...
 				// FileOutputStream creates file if it doesn't exist (the intended case)
@@ -402,8 +439,10 @@ public class FileUtils {
 		}
 		else{
 			//if thumbail exists, store it with TimeLapse
-			timelapse.thumbnail_path = thumbnail_file.getAbsolutePath();
+			timelapse.put(SQLiteWrapper.COLUMN_THUMBNAIL_PATH, thumbnail_file.getAbsolutePath());
 		}
+		
+		return timelapse;
 	}
 	
 	// Check that file has extension = ".jpeg"
@@ -412,7 +451,7 @@ public class FileUtils {
 		@Override
 		public boolean accept(File pathname) {
 			String[] pathArray = pathname.getPath().split(pathname.separator);
-			Log.d("ImageFilter", pathArray.toString());
+			//Log.d("ImageFilter", pathArray.toString());
 			String[] extensionArray = pathArray[pathArray.length-1].split("\\.");
 			// if the pathname represents a directory, it won't have extension
 			if (extensionArray.length == 1)
@@ -430,6 +469,41 @@ public class FileUtils {
 	}
 	
 	public static imageFilter mImageFilter = new imageFilter();
+	
+	public static class TimeLapseSerializer implements JsonSerializer<ContentValues> {
+		  public JsonElement serialize(ContentValues src, Type typeOfSrc, JsonSerializationContext context) {
+			  JsonObject result = new JsonObject();
+			  result.addProperty("creation_date", src.getAsString(SQLiteWrapper.COLUMN_CREATION_DATE));
+			  result.addProperty("name", src.getAsString(SQLiteWrapper.COLUMN_NAME));
+			  result.addProperty("description", src.getAsString(SQLiteWrapper.COLUMN_DESCRIPTION));
+			  result.addProperty("modified_date", src.getAsString(SQLiteWrapper.COLUMN_MODIFIED_DATE));
+			  result.addProperty("id", src.getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
+			  result.addProperty("image_count", src.getAsInteger(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+		    return result;
+		  }
+	}
+	
+	public static class TimeLapseDeserializer implements JsonDeserializer<ContentValues>{
+	
+		public ContentValues deserialize(JsonElement json, Type type,
+		        JsonDeserializationContext context) throws JsonParseException {
+	
+		    JsonObject jsonObject = (JsonObject) json;
+		    ContentValues result = new ContentValues();
+		    try{
+			    result.put(SQLiteWrapper.COLUMN_CREATION_DATE, jsonObject.get("creation_date").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_NAME, jsonObject.get("name").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_DESCRIPTION, jsonObject.get("description").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, jsonObject.get("modified_date").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, jsonObject.get("image_count").getAsString());
+			    result.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, jsonObject.get("id").getAsString());
+		    }
+		    catch(Throwable t){
+		    	throw new JsonParseException(t);
+		    }
+		    return result;
+		}
+	}
 
 
 }

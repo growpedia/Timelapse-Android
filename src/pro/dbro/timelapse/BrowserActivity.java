@@ -7,41 +7,46 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.actionbarsherlock.app.SherlockListActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.app.Activity;
+import android.app.LoaderManager.LoaderCallbacks;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-public class BrowserActivity extends SherlockListActivity {
-	
-	// These parallel arrays map plain-text timelapse properties to view resource IDs within a ListView item
-	private static final String[] BROWSER_LIST_ITEM_KEYS = {"title", "body", "timelapse", "thumbnail"};
-	private static final int[] BROWSER_LIST_ITEM_VALUES = {R.id.list_item_headline, R.id.list_item_body, R.id.list_item_container, R.id.list_item_image};
-	
-	// The adapter which connects the application data to the ListView
-	SimpleAdapter browserAdapter;
+public class BrowserActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+
+	// The real loader:
+	SimpleCursorAdapter adapter;
 	TextView empty;
-	
-	// debug
 	ListView list;
-	
+
 	public static TimeLapseApplication c;
 	
 	/** Called when the activity is first created. */
@@ -53,42 +58,54 @@ public class BrowserActivity extends SherlockListActivity {
         c = (TimeLapseApplication)getApplicationContext();
         
         list = (ListView) findViewById(android.R.id.list);
-        empty = (TextView) list.findViewById(android.R.id.empty);
+        empty = (TextView) findViewById(android.R.id.empty);
 
         // Establish LocalBroadcastManager for communication with other Classes
         LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
       	      new IntentFilter(String.valueOf(R.id.browserActivity_message)));
         
         // Load Timelapses from external storage
-        Log.d("OnCreate","Beginning filesystem read");
+        //Log.d("OnCreate","Beginning filesystem read");
         new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+ 
+        getSupportLoaderManager().initLoader(0, null, this);
+        adapter = new TimeLapseCursorAdapter(this, null);
+		list.setAdapter(adapter);
+		list.setOnItemClickListener(listItemClickListener);
+
     }
     
     public static TimeLapseApplication getContext() {
         return c;
     }
     
+    
     // Handle listview item select
-    @Override 
-    public void onListItemClick(ListView l, View v, int position, long id) {
-    	Log.d("ListView","ListItemClick");
-        if(((String)v.getTag(R.id.view_onclick_action)).equals("camera")){
-        	//  launch CameraActivity
-        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
-        	intent.putExtra("timelapse_id", (Integer)v.getTag(R.id.view_related_timelapse));
-            startActivity(intent);
-        }
-        else if(((String)v.getTag(R.id.view_onclick_action)).equals("view")){
-        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
-        	intent.putExtra("timelapse_id", (Integer)v.getTag(R.id.view_related_timelapse));
-            startActivity(intent);
-        }
-    }
+    public OnItemClickListener listItemClickListener = new OnItemClickListener(){
+
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position,
+				long id) {
+			if(((String)view.getTag(R.id.view_onclick_action)).equals("camera")){
+	        	//  launch CameraActivity
+	        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
+	        	intent.putExtra("timelapse_id", (Integer)view.getTag(R.id.view_related_timelapse));
+	            startActivity(intent);
+	        }
+	        else if(((String)view.getTag(R.id.view_onclick_action)).equals("view")){
+	        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
+	        	intent.putExtra("timelapse_id", (Integer)view.getTag(R.id.view_related_timelapse));
+	            startActivity(intent);
+	        }
+			
+		}
+    	
+    };
     
     // Populate ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.layout.browser_menu, menu);
         return true;
     }
@@ -152,16 +169,21 @@ public class BrowserActivity extends SherlockListActivity {
     	  public void onReceive(Context context, Intent intent) {
     	    // Populate ListView with received data
     		  int type = intent.getIntExtra("type", -1);
+    		  /*
     		if(type != -1){
     			if(type == R.id.filesystem_parse_complete){
-		    		Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
+		    		//Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
 		    		TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
 		    		// No Timelapses found
 		    		if( ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).size() == 0){
 		    			empty.setText(R.string.no_timelapses_found);
 		    		}
+		    		else{
+		    			populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+		    		}
+		    				    		
 		    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
-		    	    populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
+		    	    
     			}
     			else if(type == R.id.filesystem_modified){
     				Log.d("BroadcastReceiver","Smart ListView refresh");
@@ -183,16 +205,27 @@ public class BrowserActivity extends SherlockListActivity {
 	    	    	    ((ImageView)browser_list_item.findViewById(R.id.list_item_image)).setImageBitmap(thumb_bitmap);
     				}
     			}
-    		}
+    		}*/
     	  }
     };
     
     private void populateListView(ArrayList<TimeLapse> data){
     	// Populate ListView
         // (Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to)
+    	/*
         browserAdapter = new SimpleAdapter(this.getApplicationContext(), loadItems(data), R.layout.browser_list_item, BROWSER_LIST_ITEM_KEYS, BROWSER_LIST_ITEM_VALUES);
         browserAdapter.setViewBinder(new BrowserViewBinder());
         setListAdapter(browserAdapter);
+        */
+		/*
+    	Cursor cursor = sqliteManager.cursorSelectAll();
+		//getLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>) this);
+		getSupportLoaderManager().initLoader(0, null, this);
+		adapter = new TimeLapseCursorAdapter((Context)c,
+                R.layout.browser_list_item, cursor);
+		this.list.setAdapter(adapter);
+		*/
+
     }
     
     // Create Map describing ListView contents. Fed as "data" to SimpleAdapter constructor
@@ -215,9 +248,40 @@ public class BrowserActivity extends SherlockListActivity {
     		}
     		mapList.add(itemMap);
     	}
-    	Log.d("maplist_in",list.toString());
-    	Log.d("maplist_out",mapList.toString());
+    	//Log.d("maplist_in",list.toString());
+    	//Log.d("maplist_out",mapList.toString());
     	return mapList;
     }
+    
+    /**
+     * Welcome to Loader Town
+     */
+    
+ // Creates a new loader after the initLoader () call
+ 	@Override
+ 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+ 		String[] projection = { SQLiteWrapper.COLUMN_ID, SQLiteWrapper.COLUMN_TIMELAPSE_ID, SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION, SQLiteWrapper.COLUMN_THUMBNAIL_PATH };
+ 		CursorLoader cursorLoader = new CursorLoader(this,
+ 				TimeLapseContentProvider.CONTENT_URI, projection, null, null, null);
+ 		return cursorLoader;
+ 	}
+
+ 	@Override
+ 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+ 		Log.d("onLoadFinished", String.valueOf(data.getCount()));
+ 		if(data.getCount() != 0){
+ 			empty.setVisibility(View.GONE);
+ 		}
+ 		else{
+ 			empty.setText(R.string.no_timelapses_found);
+ 		}
+ 		adapter.swapCursor(data);
+ 	}
+
+ 	@Override
+ 	public void onLoaderReset(Loader<Cursor> loader) {
+ 		// data is not available anymore, delete reference
+ 		adapter.swapCursor(null);
+ 	}
 
 }

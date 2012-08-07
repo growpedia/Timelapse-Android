@@ -3,9 +3,12 @@ package pro.dbro.timelapse;
 
 import java.io.File;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+
+import android.content.ContentValues;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -26,18 +29,22 @@ public class TimeLapse implements Serializable{
 	public String last_image_path;	// path to last image. Set by FileUtils.findOrGenerateThumbnail. Used by CameraActivity for overlay
 	@NotForExport
 	public String thumbnail_path;	// path to current thumbnail. Set by FileUtils.findOrGenerateThumbnail
+	@NotForDatabase
 	@NotForExport
 	public static final String thumbnail_dir = "thumbnails";
+	@NotForDatabase
 	@NotForExport
 	public static final String thumbnail_suffix = "_thumb";
+	@NotForDatabase
 	@NotForExport
 	public static int thumbnail_height = 100;	// pixels
+	@NotForDatabase
 	@NotForExport
 	public static int thumbnail_width = 100;	// pixels
-	
+		
 	// List of filename Strings within directoryPath
-	@NotForExport
-	public ArrayList<String> images;
+	//@NotForExport
+	//public ArrayList<String> images;
 	
 	public TimeLapse(String name, String description, int id){
 		super();
@@ -48,11 +55,26 @@ public class TimeLapse implements Serializable{
 		this.creation_date = new Date();
 		
 		// Create the filesystem representation of this TimeLapse in another thread
-		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this);
+		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this.toContentValues());
 	}
 	
 	public String toString(){
 		return String.valueOf(this.id) + "-" + this.name;
+	}
+	
+	public ContentValues toContentValues(){
+		ContentValues result = new ContentValues();
+		result.put(SQLiteWrapper.COLUMN_CREATION_DATE, creation_date.toString());
+		result.put(SQLiteWrapper.COLUMN_DESCRIPTION, description);
+		result.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, directory_path);
+		result.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, String.valueOf(image_count));
+		result.put(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, last_image_path);
+		result.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, modified_date.toString());
+		result.put(SQLiteWrapper.COLUMN_NAME, name);
+		result.put(SQLiteWrapper.COLUMN_THUMBNAIL_PATH, thumbnail_path);
+		result.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, String.valueOf(id));
+		
+		return result;
 	}
 	/* Deprecated: FileUtils.generateThumbnail sets field on successful thumbnail generation
 	public String getThumbnailPath(){
@@ -72,7 +94,7 @@ public class TimeLapse implements Serializable{
 		this.description = description;
 		
 		// update the TimeLapse's representation on external storage
-		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this);
+		new FileUtils.SaveTimeLapsesOnFilesystem().execute(this.toContentValues());
 	}
 	
 	 // Excludes any field from JSON serializer that is tagged with an "@NotForExport"
