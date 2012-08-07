@@ -1,13 +1,17 @@
 package pro.dbro.timelapse;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -15,7 +19,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
 
 public class TimeLapseViewerActivity extends Activity {
@@ -25,11 +32,15 @@ public class TimeLapseViewerActivity extends Activity {
 	private EditText title;
 	private EditText description;
 	private Button actionButton;
+	private ImageView preview;
+	private SeekBar seekBar;
+	
+	private int preview_width = 0;
+	private int preview_height = 0;
+	private String timelapse_dir;
 	
 	private int timelapse_id = -1;
 	
-	private Cursor mCursor;
-
 	/** Called when the activity is first created. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +53,8 @@ public class TimeLapseViewerActivity extends Activity {
         title = (EditText) findViewById(R.id.create_timelapse_title);
         description = (EditText) findViewById(R.id.create_timelapse_description);
         actionButton =  (Button) findViewById(R.id.create_timelapse_button);
+        preview = (ImageView) findViewById(R.id.previewImage);
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
         
         tla = (TimeLapseApplication)this.getApplicationContext();
         
@@ -67,7 +80,21 @@ public class TimeLapseViewerActivity extends Activity {
             	actionButton.setText(getString(R.string.save_timelapse_button));
             	actionButton.setVisibility(View.VISIBLE);
             	actionButton.setOnClickListener(saveTimeLapseListener);
-        	}
+            	if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
+            		//Log.d("optimal_width",String.valueOf(seekBar.getWidth()));
+            		Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),640, 480);
+            		preview.setImageBitmap(optimal_bitmap);
+            		preview.setVisibility(View.VISIBLE);
+            		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
+            			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT)));
+            			if(seekBar.getMax() > 1){
+            				seekBar.setVisibility(View.VISIBLE);
+            				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
+            			}
+            			timelapse_dir = cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+            		}
+            	}
+            }
         }
     }
     
@@ -77,6 +104,18 @@ public class TimeLapseViewerActivity extends Activity {
     	// Save title / description
     	Log.d("TimeLapseViewer onPause","TL id: " + timelapse_id);
     	
+    }
+    
+    @Override
+    protected void onResume(){
+    	super.onResume();
+    	Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        //Requires API 13+
+        //display.getSize(size);
+        preview_width = display.getWidth();
+		preview_height = (int) (((double)preview_width * 3)/4);
+        
     }
     
     // Populate ActionBar
@@ -149,5 +188,36 @@ public class TimeLapseViewerActivity extends Activity {
                 startActivity(intent);
 			}
 		}
+    };
+    
+    private OnSeekBarChangeListener onSeekBarChangeListener = new OnSeekBarChangeListener(){
+
+		@Override
+		public void onProgressChanged(SeekBar seekBar, int progress,
+				boolean fromUser) {
+			if(progress != 0){
+				
+				//Log.d("Seek",String.valueOf(progress));
+				//Log.d("preview size", String.valueOf(width)+ "x" + String.valueOf(height));
+				Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + "/" + String.valueOf(progress)+".jpeg", preview_width, preview_height);
+    			
+				//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + File.pathSeparator + String.valueOf(progress)+".jpeg", 640, 480);
+    			preview.setImageBitmap(optimal_bitmap);
+			}
+			
+		}
+
+		@Override
+		public void onStartTrackingTouch(SeekBar seekBar) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onStopTrackingTouch(SeekBar seekBar) {
+			// TODO Auto-generated method stub
+			
+		}
+    	
     };
 }

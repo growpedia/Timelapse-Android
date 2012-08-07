@@ -62,6 +62,7 @@
 	    android:layout_centerVertical="true"
 	    android:layout_marginRight="4dip"
 	    android:adjustViewBounds="true"
+	    android:contentDescription="Camera"
 	    android:src="@drawable/menu_camera"
 	    android:visibility="visible" />
 

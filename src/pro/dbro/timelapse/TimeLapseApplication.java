@@ -156,6 +156,7 @@ public class TimeLapseApplication extends Application {
 			next_timelapse_id = cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_TIMELAPSE_ID)) + 1;
 		}
 		//File timelapse_dir = getOutputMediaDir(input[0].getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
+		//Log.d("Directory_path", "" + FileUtils.getOutputMediaDir(next_timelapse_id).getAbsolutePath());
 		contentValues.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, FileUtils.getOutputMediaDir(next_timelapse_id).getAbsolutePath());
 		
 		Date now = new Date();

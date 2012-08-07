@@ -47,10 +47,20 @@ public class FileUtils {
 	public static final String MEDIA_DIRECTORY = "TimeLapse";
 	
 	// File representing MEDIA_DIRECTORY path
-	public static final File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+	public static final File mediaStorageDir = getExternalStorage();
 	
 	// TAG to associate with all debug logs originating from this class
 	private static final String TAG = "FileUtils";
+	
+	public static File getExternalStorage(){
+		// First, try getting access to the sdcard partition
+		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+			return new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+		} else {
+		// Else, use the internal storage directory for this application
+		return BrowserActivity.getContext().getFilesDir();
+		}
+	}
 
 	/** Create a file Uri for saving an image or video */
 	public static Uri getOutputMediaFileUri(int timelapse_id, int type, int image_count){
@@ -72,6 +82,7 @@ public class FileUtils {
 	            return null;
 	        }
 	    }
+	    Log.d("media_dir",String.valueOf(media_dir.getAbsolutePath()));
 	    return media_dir;
 	}
 
