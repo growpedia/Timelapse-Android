@@ -258,7 +258,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
  	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
  		String[] projection = { SQLiteWrapper.COLUMN_ID, SQLiteWrapper.COLUMN_TIMELAPSE_ID, SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION, SQLiteWrapper.COLUMN_THUMBNAIL_PATH };
  		CursorLoader cursorLoader = new CursorLoader(this,
- 				TimeLapseContentProvider.CONTENT_URI, projection, null, null, null);
+ 				TimeLapseContentProvider.CONTENT_URI, projection, null, null, "name desc");
  		return cursorLoader;
  	}
 

@@ -179,6 +179,7 @@ public class FileUtils {
 					try{
 						// automatically deserialize JSON attributes matching TimeLapse fields
 						file_content = gson.fromJson(fileToString(metadata), ContentValues.class);
+						file_content.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, child.getAbsolutePath());
 						// manually assign other attributes
 						
 						// count images in directory
@@ -305,9 +306,13 @@ public class FileUtils {
 					Log.d(TAG,"Error: no timelapse_id given");
 					return "";
 				}
-				
+				Log.d("TimeLapseCollision","Reading from SavePicture");
 				TimeLapseApplication tla = BrowserActivity.getContext();
 		        ContentValues tl = SQLiteWrapper.cursorRowToContentValues(tla.getTimeLapseById(timelapse_id, null));
+		        if(!tl.containsKey(SQLiteWrapper.COLUMN_DIRECTORY_PATH)){
+		        	// If a picture is being saved before the content provider has been updated by FileUtils.SaveTimeLapseonFilesystem
+		        	tl.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, FileUtils.getOutputMediaFile(timelapse_id, FileUtils.MEDIA_TYPE_IMAGE, 0).getAbsolutePath());
+		        }
 		        Log.d("TimeLapse Retrieved in SavePicture", tl.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
 		        File pictureFile;
 		        if(tl.containsKey(SQLiteWrapper.COLUMN_IMAGE_COUNT))

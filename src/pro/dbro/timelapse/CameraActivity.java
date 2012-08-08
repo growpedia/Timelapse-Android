@@ -29,7 +29,7 @@ public class CameraActivity extends Activity {
 	private Camera mCamera;
 	private static CameraPreview mCameraPreview;
 	private static TimeLapseApplication c;
-	private int timelapse_id;
+	private int _id;
 	
 	// The optimal image size for the device's screen
 	// see getOptimalPreviewSize()
@@ -116,9 +116,9 @@ public class CameraActivity extends Activity {
     	
     	Intent intent = getIntent();
         
-        timelapse_id = intent.getExtras().getInt("timelapse_id");
+        _id = intent.getExtras().getInt("timelapse_id");
         
-        Cursor timelapse_cursor = c.getTimeLapseById(timelapse_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
+        Cursor timelapse_cursor = c.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
         if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
         	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
         		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
@@ -147,7 +147,7 @@ public class CameraActivity extends Activity {
 				//TimeLapsePictureCallback tlpc = CameraUtils.TimeLapsePictureCallback(timelapse_id);
 				if(!taking_picture){
 					taking_picture = true;
-					mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(timelapse_id));
+					mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(_id));
 				}
 				// Consume touch event
 				return true;

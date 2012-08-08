@@ -4,11 +4,13 @@ import java.io.File;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
@@ -75,9 +77,6 @@ public class TimeLapseViewerActivity extends Activity {
         	actionButton.setOnClickListener(createTimeLapseListener);
         }
         else{
-        	// Query ContentResolver for related timelapse
-            String mSelectionClause = SQLiteWrapper.COLUMN_TIMELAPSE_ID + " = ?";
-            String[] mSelectionArgs = {String.valueOf(timelapse_id)};
             
             Cursor cursor = tla.getTimeLapseById(timelapse_id, null);
         	if(cursor.moveToFirst()){
@@ -151,9 +150,13 @@ public class TimeLapseViewerActivity extends Activity {
     // Populate ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.layout.timelapse_viewer_menu, menu);
-        return true;
+    	Log.d("OnCreateOptionsMenu","yes");
+    	if(timelapse_id != -1){
+    		MenuInflater inflater = getMenuInflater();
+    		inflater.inflate(R.layout.timelapse_viewer_menu, menu);
+    	}
+    	return true;
+        
     }
     
     // Handle ActionBar Events
@@ -207,12 +210,19 @@ public class TimeLapseViewerActivity extends Activity {
 				return;
 			}
 			else{
-				tla.createTimeLapse(new String[]{SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION},
+				Uri new_timelapse = tla.createTimeLapse(new String[]{SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION},
 									new String[]{title.getText().toString(), description.getText().toString()});
+				//Uri new_timelapse_uri = Uri.parse(TimeLapseContentProvider.AUTHORITY_URI.toString() + new_timelapse.toString());
+				//Cursor cursor = getContentResolver().query(new_timelapse_uri, null, null, null, null);
+				
 				//tla.createTimeLapse(title.getText().toString(), description.getText().toString());
 				//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
-				Log.d("TimeLapse Created",title.getText().toString() + " " + description.getText().toString());
-				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
+				Log.d("TimeLapse Created",title.getText().toString() + " " + new_timelapse.getLastPathSegment().toString());
+				Intent intent = new Intent(TimeLapseViewerActivity.this, CameraActivity.class);
+				if(new_timelapse != null){
+					timelapse_id = Integer.parseInt(new_timelapse.getLastPathSegment().toString());
+					intent.putExtra("timelapse_id", timelapse_id);
+				}
 				// Signal BrowserActivity to update ListView
 				//intent.putExtra("updateListView", true);
                 startActivity(intent);

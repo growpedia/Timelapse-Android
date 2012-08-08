@@ -30,16 +30,16 @@ public class TimeLapseCursorAdapter extends SimpleCursorAdapter {
         	view_cache.headline_col = cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_NAME);
         	view_cache.body_col = cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_DESCRIPTION);
         	view_cache.thumbnail_col = cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_THUMBNAIL_PATH);
-        	view_cache.timelapse_id_col = cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_TIMELAPSE_ID);
+        	view_cache._id_col = cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_ID);
             view.setTag(R.id.view_children_cache, view_cache);
             //tag view with timelapse id
-            view.setTag(R.id.view_related_timelapse, cursor.getInt(view_cache.timelapse_id_col));
+            view.setTag(R.id.view_related_timelapse, cursor.getInt(view_cache._id_col));
         }
         //Log.d("bindView","yeah");
         view_cache.headline.setText(cursor.getString(view_cache.headline_col));
         view_cache.body.setText(cursor.getString(view_cache.body_col));
         view_cache.thumbnail.setImageBitmap(BitmapFactory.decodeFile(cursor.getString(view_cache.thumbnail_col)));
-        view.setTag(R.id.view_related_timelapse, cursor.getInt(view_cache.timelapse_id_col));
+        view.setTag(R.id.view_related_timelapse, cursor.getInt(view_cache._id_col));
     }
 	
 	// Cache the views within a ListView row item 
@@ -51,7 +51,7 @@ public class TimeLapseCursorAdapter extends SimpleCursorAdapter {
         int headline_col; 
         int body_col;
         int thumbnail_col;
-        int timelapse_id_col;
+        int _id_col;
     }
 }
 

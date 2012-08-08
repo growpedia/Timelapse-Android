@@ -28,6 +28,8 @@ public class TimeLapseContentProvider extends ContentProvider {
 		private static final String BASE_PATH = "timelapses";
 		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY
 				+ "/" + BASE_PATH);
+		
+		public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY + "/");
 
 		public static final String CONTENT_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE
 				+ "/timelapses";

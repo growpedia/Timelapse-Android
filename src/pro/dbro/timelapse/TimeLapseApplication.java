@@ -20,7 +20,7 @@ public class TimeLapseApplication extends Application {
 	public int nextTimeLapseId = 0;
 	
 	// SQL Selection Clause
-	public final String selectionClause = SQLiteWrapper.COLUMN_TIMELAPSE_ID + " = ?";
+	public final String selectionClause = SQLiteWrapper.COLUMN_ID + " = ?";
 	
 	// Singleton
 	private static TimeLapseApplication instance;
@@ -73,14 +73,13 @@ public class TimeLapseApplication extends Application {
 	 * Content Resolver Wrapper methods
 	 */
 	
-	public Cursor getTimeLapseById(int timelapse_id, String[] columns){
+	public Cursor getTimeLapseById(int _id, String[] columns){
 		// Query ContentResolver for related timelapse
-        String[] selectionArgs = {String.valueOf(timelapse_id)};
+        String[] selectionArgs = {String.valueOf(_id)};
         
         // If no columns provided, return all
         if(columns == null)
         	columns = SQLiteWrapper.COLUMNS;
-        
        return getContentResolver().query(
         	    TimeLapseContentProvider.CONTENT_URI,  // The content URI of the words table
         	    columns,                // The columns to return for each row
@@ -89,7 +88,7 @@ public class TimeLapseApplication extends Application {
         	    null);                        	   // The sort order for the returned rows
 	}
 	
-	public boolean updateTimeLapseById(int timelapse_id, String[] columns, String[] values){
+	public boolean updateTimeLapseById(int _id, String[] columns, String[] values){
 		//public int update(Uri uri, ContentValues values, String selection,
 		//		String[] selectionArgs) {		
 		ContentValues contentValues = new ContentValues();
@@ -101,7 +100,7 @@ public class TimeLapseApplication extends Application {
 		contentValues.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, now.toString());
 		
 		//make sure timelapse-id is included
-		contentValues.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, timelapse_id);
+		contentValues.put(SQLiteWrapper.COLUMN_ID, _id);
 		
 		return updateOrInsertTimeLapseByContentValues(contentValues);
 	}
@@ -115,7 +114,7 @@ public class TimeLapseApplication extends Application {
 	 */
 	public boolean updateOrInsertTimeLapseByContentValues(ContentValues cv){
 		
-		String[] selectionArgs = {cv.getAsString(SQLiteWrapper.COLUMN_TIMELAPSE_ID)};
+		String[] selectionArgs = {cv.getAsString(SQLiteWrapper.COLUMN_ID)};
 		//Cursor testQuery = getContentResolver().query(TimeLapseContentProvider.CONTENT_URI, null, selectionClause, selectionArgs, null);
 		//Log.d("QueryTest-getCount", String.valueOf(testQuery.getCount()));
 		//Log.d("QueryTest-ID", String.valueOf(testQuery.getString(testQuery.getColumnIndex(SQLiteWrapper.COLUMN_TIMELAPSE_ID))));
@@ -144,7 +143,7 @@ public class TimeLapseApplication extends Application {
 	 * @param values
 	 * @return
 	 */
-	public boolean createTimeLapse(String[] columns, String[] values){
+	public Uri createTimeLapse(String[] columns, String[] values){
 		ContentValues contentValues = new ContentValues();
 		for(int x=0;x<columns.length;x++){
 			contentValues.put(columns[x], values[x]);
@@ -166,12 +165,12 @@ public class TimeLapseApplication extends Application {
 		contentValues.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, 0);
 
 		contentValues.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, String.valueOf(next_timelapse_id));
-		getContentResolver().insert(TimeLapseContentProvider.CONTENT_URI, contentValues);
-		Log.d("TimeLapse Inserted",contentValues.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+		
+		
 		
 		// Save TimeLapse to filesystem
 		new FileUtils.SaveTimeLapsesOnFilesystem().execute(contentValues);
-		
-		return true;
+		Log.d("TimeLapseCollision","Writing from CreateTimeLapse");
+		return getContentResolver().insert(TimeLapseContentProvider.CONTENT_URI, contentValues);
 	}
 }
