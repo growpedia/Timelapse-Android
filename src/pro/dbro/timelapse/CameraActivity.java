@@ -110,31 +110,26 @@ public class CameraActivity extends Activity {
     	super.onResume();
     	// If there is no camera instance, create one
     	if(mCamera == null){
-    		Log.d("OnResume","mCamera null");
+    		//Log.d("OnResume","mCamera null");
     		mCamera = getCameraInstance();
     	}
     	else{
-    		Log.d("OnResume","mCamera not null");
+    		//Log.d("OnResume","mCamera not null");
     	}
     	
     	Intent intent = getIntent();
         
-        _id = intent.getExtras().getInt("timelapse_id");
-        
+        _id = intent.getExtras().getInt("_id");
+        Log.d("CameraActivity","id received: " + String.valueOf(_id));
         Cursor timelapse_cursor = c.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
         if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
         	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
         		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
         	}
         }
-        
-        
+
         //Log.d("CameraActivity", String.valueOf(timelapse_cursor.isNull(timelapse_cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))));
-        //Log.d("CameraActivity","lastImagePath: " +  timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
-        		
-        //if(c.time_lapse_map.get(timelapse_id).last_image_path != null)
-        //	setCameraOverlay(c.time_lapse_map.get(timelapse_id).last_image_path);
-    	
+        //Log.d("CameraActivity","lastImagePath: " +  timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));    	
     }
 
     private OnTouchListener shutterListener = new OnTouchListener(){
@@ -150,6 +145,7 @@ public class CameraActivity extends Activity {
 				//TimeLapsePictureCallback tlpc = CameraUtils.TimeLapsePictureCallback(timelapse_id);
 				if(!taking_picture){
 					taking_picture = true;
+					Log.d("CameraActivity","passing id to Camera " + String.valueOf(_id));
 					mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(_id));
 				}
 				// Consume touch event

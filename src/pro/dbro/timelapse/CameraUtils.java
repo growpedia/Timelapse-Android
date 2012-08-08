@@ -22,16 +22,16 @@ public class CameraUtils {
 	
 	// takes TimeLapse id argument to allow direct writing of picture to proper directory
 	public static class TimeLapsePictureCallback implements PictureCallback{
-		private int timelapse_id = -1;
+		private int _id = -1;
 		
-		public TimeLapsePictureCallback(int timelapse_id){
-			this.timelapse_id = timelapse_id;
+		public TimeLapsePictureCallback(int _id){
+			this._id = _id;
 		}
 		
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
-			new FileUtils.SavePictureOnFilesystem(timelapse_id).execute(data);
-			
+			Log.d("CameraUtils","passing id to FileUtils.save: " + String.valueOf(_id));
+			new FileUtils.SavePictureOnFilesystem(_id).execute(data);
 		}
 	}
 	

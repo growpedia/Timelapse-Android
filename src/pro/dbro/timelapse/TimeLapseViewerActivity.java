@@ -41,7 +41,7 @@ public class TimeLapseViewerActivity extends Activity {
 	private int preview_height = 0;
 	private String timelapse_dir;
 	
-	private int timelapse_id = -1;
+	private int _id = -1;
 	
 	private static boolean preview_is_fresh = false;
 	
@@ -63,22 +63,22 @@ public class TimeLapseViewerActivity extends Activity {
         tla = (TimeLapseApplication)this.getApplicationContext();
         
         Intent intent = getIntent();
-        timelapse_id = intent.getExtras().getInt("timelapse_id");
+        _id = intent.getExtras().getInt("_id");
 
-        Log.d("TimeLapseViewerActivity", "TL id : " + String.valueOf(timelapse_id));
+        Log.d("TimeLapseViewerActivity", "TL id : " + String.valueOf(_id));
         
         Display display = getWindowManager().getDefaultDisplay();
         preview_width = display.getWidth();
 		preview_height = (int) (((double)preview_width * 3)/4);
         
-        if(timelapse_id == -1){
+        if(_id == -1){
         	// new timelapse
         	actionButton.setVisibility(View.VISIBLE);
         	actionButton.setOnClickListener(createTimeLapseListener);
         }
         else{
             
-            Cursor cursor = tla.getTimeLapseById(timelapse_id, null);
+            Cursor cursor = tla.getTimeLapseById(_id, null);
         	if(cursor.moveToFirst()){
         		title.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_NAME)));
         		description.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DESCRIPTION)));
@@ -111,7 +111,7 @@ public class TimeLapseViewerActivity extends Activity {
     	// Save title / description
     	// User may be switching to cameraActivity, so signal the preview must be refreshed onResume
     	preview_is_fresh = false;
-    	Log.d("TimeLapseViewer onPause","TL id: " + timelapse_id);
+    	Log.d("TimeLapseViewer onPause","TL id: " + _id);
     	
     }
     
@@ -126,7 +126,7 @@ public class TimeLapseViewerActivity extends Activity {
 		if(!preview_is_fresh){
 			preview_width = display.getWidth();
 			preview_height = (int) (((double)preview_width * 3)/4);
-			Cursor cursor = tla.getTimeLapseById(timelapse_id, null);
+			Cursor cursor = tla.getTimeLapseById(_id, null);
 	    	if(cursor.moveToFirst()){
 	        	if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
 	        		//Log.d("optimal_width",String.valueOf(seekBar.getWidth()));
@@ -151,7 +151,7 @@ public class TimeLapseViewerActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	Log.d("OnCreateOptionsMenu","yes");
-    	if(timelapse_id != -1){
+    	if(_id != -1){
     		MenuInflater inflater = getMenuInflater();
     		inflater.inflate(R.layout.timelapse_viewer_menu, menu);
     	}
@@ -166,7 +166,7 @@ public class TimeLapseViewerActivity extends Activity {
             case R.id.menu_camera:
             	// Go to TimelapseViewer with new TimeLapse
             	Intent intent = new Intent(TimeLapseViewerActivity.this, CameraActivity.class);
-            	intent.putExtra("timelapse_id", timelapse_id); // indicate TimeLapseViewerActivity to create a new TimeLapse
+            	intent.putExtra("_id", _id); // indicate TimeLapseViewerActivity to create a new TimeLapse
                 startActivity(intent);
             default:
                 return super.onOptionsItemSelected(item);
@@ -183,7 +183,7 @@ public class TimeLapseViewerActivity extends Activity {
 				return;
 			}
 			else{
-				tla.updateTimeLapseById(timelapse_id, new String[] {SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION }, 
+				tla.updateTimeLapseById(_id, new String[] {SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION }, 
 													  new String[] {title.getText().toString(), description.getText().toString()});
 				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
                 startActivity(intent);
@@ -215,16 +215,16 @@ public class TimeLapseViewerActivity extends Activity {
 				//Uri new_timelapse_uri = Uri.parse(TimeLapseContentProvider.AUTHORITY_URI.toString() + new_timelapse.toString());
 				//Cursor cursor = getContentResolver().query(new_timelapse_uri, null, null, null, null);
 				
-				//tla.createTimeLapse(title.getText().toString(), description.getText().toString());
-				//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
-				Log.d("TimeLapse Created",title.getText().toString() + " " + new_timelapse.getLastPathSegment().toString());
+				//Log.d("TimeLapseCreated","passing id to camera: " + new_timelapse.getLastPathSegment().toString());
 				Intent intent = new Intent(TimeLapseViewerActivity.this, CameraActivity.class);
 				if(new_timelapse != null){
-					timelapse_id = Integer.parseInt(new_timelapse.getLastPathSegment().toString());
-					intent.putExtra("timelapse_id", timelapse_id);
+					//timelapse_id = cursor.getInt(cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
+					_id = Integer.parseInt(new_timelapse.getLastPathSegment().toString());
+					Log.d("TimeLapseCreated","passing id to camera: " + new_timelapse.getLastPathSegment().toString());
+					intent.putExtra("_id", _id);
 				}
-				// Signal BrowserActivity to update ListView
-				//intent.putExtra("updateListView", true);
+				// Intent.FLAG_ACTIVITY_CLEAR_TOP will allow gallery to live-load images just taken on newly created TimeLapse
+				intent.setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP);
                 startActivity(intent);
 			}
 		}

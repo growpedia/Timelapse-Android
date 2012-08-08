@@ -21,6 +21,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -38,7 +39,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 	SimpleCursorAdapter adapter;
 	TextView empty;
 	ListView list;
-	
+
 	public static final String PREFS_NAME = "TimeLapseStoragePrefs";
 	public static final String PREFS_STORAGE_LOCATION = "storage_location";
 
@@ -57,8 +58,8 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         empty = (TextView) findViewById(android.R.id.empty);
         
         // Establish LocalBroadcastManager for communication with other Classes
-        LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
-      	      new IntentFilter(String.valueOf(R.id.browserActivity_message)));
+        //LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
+      	//      new IntentFilter(String.valueOf(R.id.browserActivity_message)));
         
         // Load Timelapses from external storage
         //Log.d("OnCreate","Beginning filesystem read");
@@ -80,20 +81,12 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
     public OnItemClickListener listItemClickListener = new OnItemClickListener(){
 
 		@Override
-		public void onItemClick(AdapterView<?> parent, View view, int position,
-				long id) {
-			if(((String)view.getTag(R.id.view_onclick_action)).equals("camera")){
-	        	//  launch CameraActivity
-	        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
-	        	intent.putExtra("timelapse_id", (Integer)view.getTag(R.id.view_related_timelapse));
-	            startActivity(intent);
-	        }
-	        else if(((String)view.getTag(R.id.view_onclick_action)).equals("view")){
-	        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
-	        	intent.putExtra("timelapse_id", (Integer)view.getTag(R.id.view_related_timelapse));
-	            startActivity(intent);
-	        }
-			
+		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			//  launch CameraActivity
+			Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
+			intent.putExtra("_id", (Integer)view.getTag(R.id.view_related_timelapse));
+		    startActivity(intent);
+
 		}
     	
     };
@@ -113,7 +106,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
             case R.id.menu_add:
             	// Go to TimelapseViewer with new TimeLapse
             	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
-            	intent.putExtra("timelapse_id", -1); // indicate TimeLapseViewerActivity to create a new TimeLapse
+            	intent.putExtra("_id", -1); // indicate TimeLapseViewerActivity to create a new TimeLapse
                 startActivity(intent);
             default:
                 return super.onOptionsItemSelected(item);
@@ -123,28 +116,9 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
     @Override
     protected void onResume(){
     	super.onResume();
-    	
-    	//TimeLapseApplication tla = (TimeLapseApplication)getApplicationContext();
-    	//ArrayList<TimeLapse> valuesList = new ArrayList<TimeLapse>(tla.time_lapse_map.values());
-    	//Log.d("BrowserActivity","onResume. Populating Listview: " + valuesList.toString());
-    	//populateListView(valuesList);
+
     }
-    
-    // TimeLapseViewerActivity starts this activity with a bundled intent message to update view
-    // Deprecated: FileUtils.SaveTimeLapseOnFilesystem will signal re-draw
-   /*
-    @Override
-    protected void onNewIntent (Intent intent){
-    	Log.d("onNewIntent","called");
-    	if (( intent.hasExtra("updateListView"))){
-    		TimeLapseApplication tla = (TimeLapseApplication)getApplicationContext();
-        	ArrayList<TimeLapse> valuesList = new ArrayList<TimeLapse>(tla.time_lapse_map.values());
-        	Log.d("onNewIntent","Refreshing Listview: " + valuesList.toString());
-        	populateListView(valuesList);
-    	}
-    }
-    */
-    
+     
     @Override
     protected void onPause(){
     	super.onPause();
@@ -154,57 +128,11 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
     @Override
 	protected void onDestroy() {
 	  // Unregister since the activity is about to be closed.
-	  LocalBroadcastManager.getInstance(this).unregisterReceiver(browserActivityMessageReceiver);
+	  //LocalBroadcastManager.getInstance(this).unregisterReceiver(browserActivityMessageReceiver);
 	  super.onDestroy();
 	}
     
-    // Receives messages from other components
-    // i.e: when the application state is done being read from the filesystem
-    private BroadcastReceiver browserActivityMessageReceiver = new BroadcastReceiver() {
-    	  @Override
-    	  public void onReceive(Context context, Intent intent) {
-    	    // Populate ListView with received data
-    		  int type = intent.getIntExtra("type", -1);
-    		  /*
-    		if(type != -1){
-    			if(type == R.id.filesystem_parse_complete){
-		    		//Log.d("Broadcast Receiver", "Received filesystem read result: " + ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).toString());
-		    		TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
-		    		// No Timelapses found
-		    		if( ((ArrayList<TimeLapse>) intent.getSerializableExtra("result")).size() == 0){
-		    			empty.setText(R.string.no_timelapses_found);
-		    		}
-		    		else{
-		    			populateListView((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
-		    		}
-		    				    		
-		    		tla.setTimeLapses((ArrayList<TimeLapse>) intent.getSerializableExtra("result"));
-		    	    
-    			}
-    			else if(type == R.id.filesystem_modified){
-    				Log.d("BroadcastReceiver","Smart ListView refresh");
-    				int timelapse_id = intent.getIntExtra("timelapse_id", -1);
-    				if (timelapse_id == -1)
-    					return;
-    				TimeLapseApplication  tla = (TimeLapseApplication)getApplicationContext();
-    				TimeLapse timelapse = tla.time_lapse_map.get(timelapse_id);
-    				//ListView lv = (ListView) findViewById()
-    				int view_id = Integer.parseInt(String.valueOf(timelapse_id));
-    				RelativeLayout browser_list_item = ((RelativeLayout) findViewById(view_id));
-    				// If the timelapse was just created WILL CRASH
-    				// Here comes the refactor
-    				((TextView)browser_list_item.findViewById(R.id.list_item_headline)).setText(timelapse.name);
-    				((TextView)browser_list_item.findViewById(R.id.list_item_body)).setText(timelapse.description);
-    				if(timelapse.image_count != 0){
-    					Log.d("BrowserActivity","TL " + String.valueOf(timelapse.id) + " thumb set to " + timelapse.thumbnail_path);
-	    				Bitmap thumb_bitmap = BitmapFactory.decodeFile(timelapse.thumbnail_path);
-	    	    	    ((ImageView)browser_list_item.findViewById(R.id.list_item_image)).setImageBitmap(thumb_bitmap);
-    				}
-    			}
-    		}*/
-    	  }
-    };
-    
+ 
     private void populateListView(ArrayList<TimeLapse> data){
     	// Populate ListView
         // (Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to)

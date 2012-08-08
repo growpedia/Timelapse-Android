@@ -292,25 +292,27 @@ public class FileUtils {
 		// Save a picture (given as byte[]) to the filesystem
 		public static class SavePictureOnFilesystem extends AsyncTask<byte[], Void, String>{
 			
-			int timelapse_id = -1;
+			int _id = -1;
 		
-			public SavePictureOnFilesystem(int timelapse_id){
+			public SavePictureOnFilesystem(int _id){
 				super();
-				this.timelapse_id = timelapse_id;
+				this._id = _id;
 				
 			}
 			// This method is executed in a separate thread
 			@Override
 			protected String doInBackground(byte[]... input) {
-				if(timelapse_id == -1){
-					Log.d(TAG,"Error: no timelapse_id given");
+				if(_id == -1){
+					Log.d(TAG,"Error: no _id given");
 					return "";
 				}
-				Log.d("TimeLapseCollision","Reading from SavePicture");
+				Log.d("SavePicture","Reading contentprovider " + String.valueOf(_id));
 				TimeLapseApplication tla = BrowserActivity.getContext();
-		        ContentValues tl = SQLiteWrapper.cursorRowToContentValues(tla.getTimeLapseById(timelapse_id, null));
+		        ContentValues tl = SQLiteWrapper.cursorRowToContentValues(tla.getTimeLapseById(_id, null));
+		        int timelapse_id = tl.getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID);
 		        if(!tl.containsKey(SQLiteWrapper.COLUMN_DIRECTORY_PATH)){
 		        	// If a picture is being saved before the content provider has been updated by FileUtils.SaveTimeLapseonFilesystem
+		        	Log.d("SavePictureTimeLapse","Dir_path unexpectedly blank:" +  FileUtils.getOutputMediaFile(timelapse_id, FileUtils.MEDIA_TYPE_IMAGE, 0).getAbsolutePath());
 		        	tl.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, FileUtils.getOutputMediaFile(timelapse_id, FileUtils.MEDIA_TYPE_IMAGE, 0).getAbsolutePath());
 		        }
 		        Log.d("TimeLapse Retrieved in SavePicture", tl.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
@@ -326,6 +328,7 @@ public class FileUtils {
 		        }
 
 		        try {
+		        	Log.d("Writing picture",pictureFile.getAbsolutePath());
 		            FileOutputStream fos = new FileOutputStream(pictureFile);
 		            fos.write(input[0]);
 		            fos.close();
@@ -355,7 +358,7 @@ public class FileUtils {
 		        
 		        // TODO: Save new thumb, image to db OR do it in SaveTimeLapse
 		        Log.d("SavePicture",tl.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
-		        tla.updateTimeLapseById(timelapse_id, new String[]{SQLiteWrapper.COLUMN_MODIFIED_DATE,  SQLiteWrapper.COLUMN_IMAGE_COUNT, SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, SQLiteWrapper.COLUMN_THUMBNAIL_PATH},
+		        tla.updateTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_MODIFIED_DATE,  SQLiteWrapper.COLUMN_IMAGE_COUNT, SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, SQLiteWrapper.COLUMN_THUMBNAIL_PATH},
 		        									  new String[]{new Date().toString(), String.valueOf(num_images+=1), tl.getAsString(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH), tl.getAsString(SQLiteWrapper.COLUMN_THUMBNAIL_PATH)});
 				
 		        // Save the new metadata.json reflecting the recently taken picture
@@ -431,7 +434,7 @@ public class FileUtils {
 	public static ContentValues findOrGenerateThumbnail(ContentValues timelapse){
 		
 		File timelapse_dir = new File(timelapse.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
-		
+		Log.d("findOrGenerateThumbnail",timelapse_dir.getAbsolutePath());
 		// if the timelapse dir does not exist or is a file,
 		// fixing the application state is beyond the scope of this method
 		// TODO: for performance, remove this check 
