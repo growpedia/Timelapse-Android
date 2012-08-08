@@ -41,6 +41,8 @@ public class TimeLapseViewerActivity extends Activity {
 	
 	private int timelapse_id = -1;
 	
+	private static boolean preview_is_fresh = false;
+	
 	/** Called when the activity is first created. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +65,10 @@ public class TimeLapseViewerActivity extends Activity {
 
         Log.d("TimeLapseViewerActivity", "TL id : " + String.valueOf(timelapse_id));
         
+        Display display = getWindowManager().getDefaultDisplay();
+        preview_width = display.getWidth();
+		preview_height = (int) (((double)preview_width * 3)/4);
+        
         if(timelapse_id == -1){
         	// new timelapse
         	actionButton.setVisibility(View.VISIBLE);
@@ -82,12 +88,13 @@ public class TimeLapseViewerActivity extends Activity {
             	actionButton.setOnClickListener(saveTimeLapseListener);
             	if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
             		//Log.d("optimal_width",String.valueOf(seekBar.getWidth()));
-            		Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),640, 480);
+            		Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),preview_width, preview_height);
             		preview.setImageBitmap(optimal_bitmap);
             		preview.setVisibility(View.VISIBLE);
             		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
-            			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT)));
+            			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
             			if(seekBar.getMax() > 1){
+            				Log.v("progressMAX", String.valueOf(seekBar.getMax()));
             				seekBar.setVisibility(View.VISIBLE);
             				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
             			}
@@ -96,12 +103,15 @@ public class TimeLapseViewerActivity extends Activity {
             	}
             }
         }
+        preview_is_fresh = true;
     }
     
     @Override
     protected void onPause(){
     	super.onPause();
     	// Save title / description
+    	// User may be switching to cameraActivity, so signal the preview must be refreshed onResume
+    	preview_is_fresh = false;
     	Log.d("TimeLapseViewer onPause","TL id: " + timelapse_id);
     	
     }
@@ -110,11 +120,31 @@ public class TimeLapseViewerActivity extends Activity {
     protected void onResume(){
     	super.onResume();
     	Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
+        //Point size = new Point();
         //Requires API 13+
         //display.getSize(size);
-        preview_width = display.getWidth();
-		preview_height = (int) (((double)preview_width * 3)/4);
+
+		if(!preview_is_fresh){
+			preview_width = display.getWidth();
+			preview_height = (int) (((double)preview_width * 3)/4);
+			Cursor cursor = tla.getTimeLapseById(timelapse_id, null);
+	    	if(cursor.moveToFirst()){
+	        	if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
+	        		//Log.d("optimal_width",String.valueOf(seekBar.getWidth()));
+	        		Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),preview_width, preview_height);
+	        		preview.setImageBitmap(optimal_bitmap);
+	        		preview.setVisibility(View.VISIBLE);
+	        		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
+	        			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
+	        			if(seekBar.getMax() > 1){
+	        				seekBar.setVisibility(View.VISIBLE);
+	        				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
+	        			}
+	        		}
+	        	}
+	        }
+	    	preview_is_fresh = true;
+		}
         
     }
     
@@ -195,16 +225,13 @@ public class TimeLapseViewerActivity extends Activity {
 		@Override
 		public void onProgressChanged(SeekBar seekBar, int progress,
 				boolean fromUser) {
-			if(progress != 0){
 				
-				//Log.d("Seek",String.valueOf(progress));
-				//Log.d("preview size", String.valueOf(width)+ "x" + String.valueOf(height));
-				Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + "/" + String.valueOf(progress)+".jpeg", preview_width, preview_height);
-    			
-				//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + File.pathSeparator + String.valueOf(progress)+".jpeg", 640, 480);
-    			preview.setImageBitmap(optimal_bitmap);
-			}
+			Log.v("Seek",String.valueOf(progress));
+			//Log.d("preview size", String.valueOf(width)+ "x" + String.valueOf(height));
+			Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + "/" + String.valueOf(progress+1)+".jpeg", preview_width, preview_height);
 			
+			//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + File.pathSeparator + String.valueOf(progress)+".jpeg", 640, 480);
+			preview.setImageBitmap(optimal_bitmap);
 		}
 
 		@Override

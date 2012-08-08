@@ -1,30 +1,22 @@
 package pro.dbro.timelapse;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 import pro.dbro.timelapse.R.id;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
@@ -231,8 +223,13 @@ public class CameraActivity extends Activity {
         List supportedPictureSizes = mCamera.getParameters().getSupportedPictureSizes();
         Camera.Parameters parameters = mCamera.getParameters();
         parameters.setPictureSize(((Camera.Size)supportedPictureSizes.get(0)).width, ((Camera.Size)supportedPictureSizes.get(0)).height);
+        
         // Set autoFocus mode
-        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        List supportedFocusModes = mCamera.getParameters().getSupportedFocusModes();
+        if(isSupported(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE, supportedFocusModes))
+        	parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        else if(isSupported(Camera.Parameters.FOCUS_MODE_AUTO, supportedFocusModes))
+        		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
         
         // Set Camera preview params
         List<Size> sizes = parameters.getSupportedPreviewSizes();
@@ -251,5 +248,9 @@ public class CameraActivity extends Activity {
         //Log.d("onSurfaceChanged","width: "+ String.valueOf(((Camera.Size)parameters.getPreviewSize()).width) + " x "+ String.valueOf(((Camera.Size)parameters.getPreviewSize()).height));
         mCamera.setParameters(parameters);
 	}
+	
+	private static boolean isSupported(String value, List<String> supported) {
+        return supported == null ? false : supported.indexOf(value) >= 0;
+    }
    
 }

@@ -28,6 +28,7 @@ import com.google.gson.JsonSerializer;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -53,12 +54,26 @@ public class FileUtils {
 	private static final String TAG = "FileUtils";
 	
 	public static File getExternalStorage(){
-		// First, try getting access to the sdcard partition
-		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-			return new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
-		} else {
-		// Else, use the internal storage directory for this application
-		return BrowserActivity.getContext().getFilesDir();
+		// Check if storage preference exists:
+		SharedPreferences prefs = BrowserActivity.getContext().getSharedPreferences(BrowserActivity.PREFS_NAME, 0);
+		if(prefs.contains(BrowserActivity.PREFS_STORAGE_LOCATION)){
+			return new File(prefs.getString(BrowserActivity.PREFS_STORAGE_LOCATION, BrowserActivity.getContext().getFilesDir().getAbsolutePath()));
+		}
+		else{
+			SharedPreferences.Editor editor = prefs.edit();
+			File result;
+			// First, try getting access to the sdcard partition
+			if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+				Log.d("MediaDir","Using sdcard");
+				result = new File(Environment.getExternalStorageDirectory(), MEDIA_DIRECTORY);
+			} else {
+			// Else, use the internal storage directory for this application
+				Log.d("MediaDir","Using internal storage");
+				result = new File(BrowserActivity.getContext().getFilesDir(), MEDIA_DIRECTORY);
+			}
+			editor.putString(BrowserActivity.PREFS_STORAGE_LOCATION, result.getAbsolutePath());
+			editor.commit();
+			return result;
 		}
 	}
 

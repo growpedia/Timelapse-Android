@@ -13,6 +13,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
@@ -37,6 +38,9 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 	SimpleCursorAdapter adapter;
 	TextView empty;
 	ListView list;
+	
+	public static final String PREFS_NAME = "TimeLapseStoragePrefs";
+	public static final String PREFS_STORAGE_LOCATION = "storage_location";
 
 	public static TimeLapseApplication c;
 	
@@ -51,7 +55,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         
         list = (ListView) findViewById(android.R.id.list);
         empty = (TextView) findViewById(android.R.id.empty);
-
+        
         // Establish LocalBroadcastManager for communication with other Classes
         LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
       	      new IntentFilter(String.valueOf(R.id.browserActivity_message)));
