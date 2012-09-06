@@ -292,7 +292,7 @@ public class FileUtils {
 		// Save a picture (given as byte[]) to the filesystem
 		public static class SavePictureOnFilesystem extends AsyncTask<byte[], Void, String>{
 			
-			int _id = -1;
+			private int _id = -1;
 		
 			public SavePictureOnFilesystem(int _id){
 				super();
@@ -358,8 +358,8 @@ public class FileUtils {
 		        
 		        // TODO: Save new thumb, image to db OR do it in SaveTimeLapse
 		        Log.d("SavePicture",tl.getAsString(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
-		        tla.updateTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_MODIFIED_DATE,  SQLiteWrapper.COLUMN_IMAGE_COUNT, SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, SQLiteWrapper.COLUMN_THUMBNAIL_PATH},
-		        									  new String[]{new Date().toString(), String.valueOf(num_images+=1), tl.getAsString(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH), tl.getAsString(SQLiteWrapper.COLUMN_THUMBNAIL_PATH)});
+		        tla.updateTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_IMAGE_COUNT, SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, SQLiteWrapper.COLUMN_THUMBNAIL_PATH},
+		        									  new String[]{String.valueOf(num_images+=1), tl.getAsString(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH), tl.getAsString(SQLiteWrapper.COLUMN_THUMBNAIL_PATH)});
 				
 		        // Save the new metadata.json reflecting the recently taken picture
 		        new FileUtils.SaveTimeLapsesOnFilesystem().execute(tl);

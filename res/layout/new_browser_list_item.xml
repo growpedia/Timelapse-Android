@@ -18,30 +18,46 @@
         android:layout_alignParentTop="true"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/cage"
+        android:src="@null"
         android:visibility="visible" />
 
     <TextView
         android:id="@+id/list_item_headline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/list_item_body"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="4dip"
         android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/list_item_camera"
         android:textColor="#FFFFFF"
         android:ellipsize="marquee"
         android:gravity="center_vertical"
         android:padding="2dp"
         android:shadowColor="#000000"
-        android:shadowDx="7.0"
-        android:shadowDy="7.0"
+        android:shadowDx="5.0"
+        android:shadowDy="5.0"
         android:shadowRadius="5.0"
         android:singleLine="true"
-        android:text="Title"
+        android:text="New"
         android:textSize="45dip" >
 	     >
     </TextView>
+    
+    <ImageView
+	    android:id="@+id/list_item_camera"
+	    android:layout_width="80dip"
+	    android:layout_height="fill_parent"
+	    android:layout_alignParentBottom="true"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentTop="true"
+	    android:layout_centerVertical="true"
+	    android:adjustViewBounds="true"
+	    android:contentDescription="Camera"
+	    android:layout_marginTop="15dp"
+	    android:layout_marginBottom="15dp"
+	    android:src="@drawable/camera"
+	    android:visibility="visible" />
 
 
 </pro.dbro.timelapse.ListItemRelativeLayout>

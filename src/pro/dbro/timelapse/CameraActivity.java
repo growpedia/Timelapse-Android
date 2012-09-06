@@ -1,6 +1,7 @@
 package pro.dbro.timelapse;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 
 import pro.dbro.timelapse.R.id;
@@ -56,7 +57,6 @@ public class CameraActivity extends Activity {
         
         // Store context for use by static methods
         c = (TimeLapseApplication)getApplicationContext();
-        
         cameraOverlay = (ImageView) findViewById(id.camera_overlay);
         cameraOverlay.setAlpha(100);
 
@@ -130,6 +130,7 @@ public class CameraActivity extends Activity {
 
         //Log.d("CameraActivity", String.valueOf(timelapse_cursor.isNull(timelapse_cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))));
         //Log.d("CameraActivity","lastImagePath: " +  timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));    	
+        timelapse_cursor.close();
     }
 
     private OnTouchListener shutterListener = new OnTouchListener(){

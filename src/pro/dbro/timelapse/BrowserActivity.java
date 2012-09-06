@@ -26,8 +26,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -50,11 +52,13 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Crittercism.init(getApplicationContext(), Secrets.CRITTERCISM_ID);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.browser);
         
         c = (TimeLapseApplication)getApplicationContext();
         
         list = (ListView) findViewById(android.R.id.list);
+        list.addHeaderView(this.getLayoutInflater().inflate(R.layout.browser_list_header, null));
         empty = (TextView) findViewById(android.R.id.empty);
         
         // Establish LocalBroadcastManager for communication with other Classes
@@ -76,21 +80,34 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         return c;
     }
     
-    
     // Handle listview item select
     public OnItemClickListener listItemClickListener = new OnItemClickListener(){
 
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-			//  launch CameraActivity
-			Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
-			intent.putExtra("_id", (Integer)view.getTag(R.id.view_related_timelapse));
-		    startActivity(intent);
-
+			Log.d("OnItemClick",String.valueOf(position));
+			//Special behavior for HeaderView
+			
+        	if(position == 0){
+        		Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
+        		intent.putExtra("_id", -1);
+        		startActivity(intent);
+        	}
+        	else if(((String)view.getTag(R.id.view_onclick_action)).equals("camera")){
+	        	//  launch CameraActivity
+	        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
+	        	intent.putExtra("_id", (Integer)view.getTag(R.id.view_related_timelapse));
+	            startActivity(intent);
+	        }
+	        else if(((String)view.getTag(R.id.view_onclick_action)).equals("view")){
+	        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
+	        	intent.putExtra("_id", (Integer)view.getTag(R.id.view_related_timelapse));
+	            startActivity(intent);
+	        }
 		}
     	
     };
-    
+    /*
     // Populate ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -112,7 +129,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
                 return super.onOptionsItemSelected(item);
         }
     }
-    
+    */
     @Override
     protected void onResume(){
     	super.onResume();
@@ -186,7 +203,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
  	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
  		String[] projection = { SQLiteWrapper.COLUMN_ID, SQLiteWrapper.COLUMN_TIMELAPSE_ID, SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION, SQLiteWrapper.COLUMN_THUMBNAIL_PATH };
  		CursorLoader cursorLoader = new CursorLoader(this,
- 				TimeLapseContentProvider.CONTENT_URI, projection, null, null, "name desc");
+ 				TimeLapseContentProvider.CONTENT_URI, projection, null, null, "modified_date desc");
  		return cursorLoader;
  	}
 

@@ -1,56 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Create TimeLapse dialog -->
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
 
-    <LinearLayout
+    <EditText
+        android:id="@+id/create_timelapse_title"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical" >
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:hint="@string/create_timelapse_dialog_title_hint"
+        android:textSize="20dp" />
 
-        <EditText
-            android:id="@+id/create_timelapse_title"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/create_timelapse_dialog_title_hint"
-            android:textSize="20dp" />
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:visibility="gone" />
 
-        <EditText
-            android:id="@+id/create_timelapse_description"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/create_timelapse_dialog_description_hint"
-            android:textSize="20dp" />
+    <ImageView
+        android:id="@+id/previewImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/seekBar"
+        android:layout_below="@id/create_timelapse_title"
+        android:layout_gravity="center"
+        android:scaleType="fitXY"
+        android:visibility="gone" />
 
-        <Button
-            android:id="@+id/create_timelapse_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="10dp"
-            android:padding="20dp"
-            android:text="@string/create_timelapse_button"
-            android:textSize="20dp"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/previewImage"
-            android:adjustViewBounds="true"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:src="@drawable/cage"
-            android:visibility="gone" />
-
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:visibility="gone" />
-    </LinearLayout>
-
-</ScrollView>
+</RelativeLayout>

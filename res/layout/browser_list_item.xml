@@ -60,10 +60,11 @@
 	    android:layout_alignParentRight="true"
 	    android:layout_alignParentTop="true"
 	    android:layout_centerVertical="true"
+	    android:layout_margin="5dip"
 	    android:layout_marginRight="4dip"
 	    android:adjustViewBounds="true"
 	    android:contentDescription="Camera"
-	    android:src="@drawable/menu_camera"
+	    android:src="@drawable/camera"
 	    android:visibility="visible" />
 
 </pro.dbro.timelapse.ListItemRelativeLayout>

@@ -1,6 +1,7 @@
 package pro.dbro.timelapse;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,9 +19,6 @@ public class TimeLapseApplication extends Application {
 	// id -> TimeLapse
 	public HashMap<Integer,TimeLapse> time_lapse_map = new HashMap<Integer,TimeLapse>();
 	public int nextTimeLapseId = 0;
-	
-	// SQL Selection Clause
-	public final String selectionClause = SQLiteWrapper.COLUMN_ID + " = ?";
 	
 	// Singleton
 	private static TimeLapseApplication instance;
@@ -75,6 +73,7 @@ public class TimeLapseApplication extends Application {
 	
 	public Cursor getTimeLapseById(int _id, String[] columns){
 		// Query ContentResolver for related timelapse
+		String selectionClause = SQLiteWrapper.COLUMN_ID + " = ?";
         String[] selectionArgs = {String.valueOf(_id)};
         
         // If no columns provided, return all
@@ -97,7 +96,9 @@ public class TimeLapseApplication extends Application {
 		}
 		
 		Date now = new Date();
-		contentValues.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, now.toString());
+		SimpleDateFormat iso8601Format = new SimpleDateFormat(
+	            "yyyy-MM-dd HH:mm:ss");
+		contentValues.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, iso8601Format.format(now));
 		
 		//make sure timelapse-id is included
 		contentValues.put(SQLiteWrapper.COLUMN_ID, _id);
@@ -113,8 +114,15 @@ public class TimeLapseApplication extends Application {
 	 * @return true if an existing row was updated, false if a new row was created
 	 */
 	public boolean updateOrInsertTimeLapseByContentValues(ContentValues cv){
-		
-		String[] selectionArgs = {cv.getAsString(SQLiteWrapper.COLUMN_ID)};
+		String selectionClause = null;
+		String[] selectionArgs = null;
+		if(cv.containsKey(SQLiteWrapper.COLUMN_ID)){
+			selectionClause = SQLiteWrapper.COLUMN_ID + " = ?";
+			selectionArgs = new String[]{cv.getAsString(SQLiteWrapper.COLUMN_ID)};
+		} else if(cv.containsKey(SQLiteWrapper.COLUMN_TIMELAPSE_ID)){
+			selectionClause = SQLiteWrapper.COLUMN_TIMELAPSE_ID + " = ?";
+			selectionArgs = new String[]{cv.getAsString(SQLiteWrapper.COLUMN_TIMELAPSE_ID)};
+		}
 		//Cursor testQuery = getContentResolver().query(TimeLapseContentProvider.CONTENT_URI, null, selectionClause, selectionArgs, null);
 		//Log.d("QueryTest-getCount", String.valueOf(testQuery.getCount()));
 		//Log.d("QueryTest-ID", String.valueOf(testQuery.getString(testQuery.getColumnIndex(SQLiteWrapper.COLUMN_TIMELAPSE_ID))));
@@ -125,9 +133,10 @@ public class TimeLapseApplication extends Application {
 				selectionClause, 
 				selectionArgs);
 		
-		if(numUpdated > 0)
+		if(numUpdated > 0){
+			Log.d("updateOrInsertTimeLapseByContentValue","success");
 			return true;
-		else{
+		} else{
 			Log.d("updateOrInsertTimeLapseByContentValue","kindly note that this behavior is currently fucked");
 			//TODO: Add defaults for not null fields
 			getContentResolver().insert(TimeLapseContentProvider.CONTENT_URI, cv);
@@ -159,8 +168,10 @@ public class TimeLapseApplication extends Application {
 		contentValues.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, FileUtils.getOutputMediaDir(next_timelapse_id).getAbsolutePath());
 		
 		Date now = new Date();
-		contentValues.put(SQLiteWrapper.COLUMN_CREATION_DATE, now.toString());
-		contentValues.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, now.toString());
+		SimpleDateFormat iso8601Format = new SimpleDateFormat(
+	            "yyyy-MM-dd HH:mm:ss");
+		contentValues.put(SQLiteWrapper.COLUMN_CREATION_DATE, iso8601Format.format(now));
+		contentValues.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, iso8601Format.format(now));
 		
 		contentValues.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, 0);
 
@@ -171,6 +182,7 @@ public class TimeLapseApplication extends Application {
 		// Save TimeLapse to filesystem
 		new FileUtils.SaveTimeLapsesOnFilesystem().execute(contentValues);
 		Log.d("TimeLapseCollision","Writing from CreateTimeLapse");
+		cursor.close();
 		return getContentResolver().insert(TimeLapseContentProvider.CONTENT_URI, contentValues);
 	}
 }

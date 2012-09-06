@@ -5,28 +5,17 @@ A timelapse tool for Android devices running Android 2.2 or later.
 
 Requirements
 ------------
-+ Gson 2.2.1 for JSON translation
+All requirements are included with the project in `./libs`
+
++ Gson 2.2.1
+  + JSON translation
 + android-support-library-v4
-+ ActionBarSherlock 4.1.0
+  + CursorLoader for automatic, asynchronous db-listview interaction in Android 2.2
 
-Installation (Eclipse w/ADT)
+Configuration (Eclipse w/ADT)
 ------------
-
-1. Download ActionBarSherlock
-		
-		http://actionbarsherlock.com/download.html
-		
-2. Create a library project in Eclipse (for ActionBarSherlock)
-		
-		File -> New -> Project… -> Android Project from Existing Code
-   Select ActionBarSherlock's **/library** folder as the "Root Directory".
-
-3. Add the ActionBarSherlock library project to the TimeLapse project build path
-
-		project properties -> Android -> Add (In Library Pane)
-	Select the ActionBarSherlock library project.
 	
-4. Ensure android-support-library-v4 and gson are in the project build path
+1. Ensure android-support-library-v4 and gson are in the project build path
 
 		project properties -> Java Build Path -> Libraries (Tab)
 	
@@ -68,11 +57,8 @@ an instance of the system Camera.
 
 TODO
 ----
-+ Video export via ffmpeg
++ Delete images within TimeLapse
++ Video/.gif export via ffmpeg
++ Improved TimeLapse viewing UI
 + Stability - proper camera releasing?
 + Improved performance of camera overlay setting
-+ b/c BrowserActivity is now launchmode:singleTask, implement ActionBar Home behavior for TimeLapseViewer
-+ Remove TimeLapseApplication for thread safety?
-
-
-? Does editing the TimeLapse title/desc change the modified_date?

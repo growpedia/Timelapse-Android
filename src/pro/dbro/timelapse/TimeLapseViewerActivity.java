@@ -9,6 +9,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,9 +32,12 @@ public class TimeLapseViewerActivity extends Activity {
 	
 	private TimeLapseApplication tla;
 	
+	// Store the title when the activity starts
+	// compare to title.getText() during onPause()
+	String originalTitle = "";
 	private EditText title;
-	private EditText description;
-	private Button actionButton;
+	//private EditText description;
+	//private Button actionButton;
 	private ImageView preview;
 	private SeekBar seekBar;
 	
@@ -42,6 +46,8 @@ public class TimeLapseViewerActivity extends Activity {
 	private String timelapse_dir;
 	
 	private int _id = -1;
+	
+	BitmapFactory bmf = new BitmapFactory();
 	
 	private static boolean preview_is_fresh = false;
 	
@@ -55,8 +61,8 @@ public class TimeLapseViewerActivity extends Activity {
         setContentView(R.layout.timelapse);
         
         title = (EditText) findViewById(R.id.create_timelapse_title);
-        description = (EditText) findViewById(R.id.create_timelapse_description);
-        actionButton =  (Button) findViewById(R.id.create_timelapse_button);
+        //description = (EditText) findViewById(R.id.create_timelapse_description);
+        //actionButton =  (Button) findViewById(R.id.create_timelapse_button);
         preview = (ImageView) findViewById(R.id.previewImage);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         
@@ -70,48 +76,54 @@ public class TimeLapseViewerActivity extends Activity {
         Display display = getWindowManager().getDefaultDisplay();
         preview_width = display.getWidth();
 		preview_height = (int) (((double)preview_width * 3)/4);
-        
-        if(_id == -1){
-        	// new timelapse
-        	actionButton.setVisibility(View.VISIBLE);
-        	actionButton.setOnClickListener(createTimeLapseListener);
-        }
-        else{
+
             
-            Cursor cursor = tla.getTimeLapseById(_id, null);
-        	if(cursor.moveToFirst()){
-        		title.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_NAME)));
-        		description.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DESCRIPTION)));
-            	actionButton.setText(getString(R.string.save_timelapse_button));
-            	actionButton.setVisibility(View.VISIBLE);
-            	actionButton.setOnClickListener(saveTimeLapseListener);
-            	if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
-            		//Log.d("optimal_width",String.valueOf(seekBar.getWidth()));
-            		Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),preview_width, preview_height);
-            		preview.setImageBitmap(optimal_bitmap);
-            		preview.setVisibility(View.VISIBLE);
-            		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
-            			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
-            			if(seekBar.getMax() > 1){
-            				Log.v("progressMAX", String.valueOf(seekBar.getMax()));
-            				seekBar.setVisibility(View.VISIBLE);
-            				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
-            			}
-            			timelapse_dir = cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
-            		}
-            	}
-            }
+        Cursor cursor = tla.getTimeLapseById(_id, null);
+    	if(cursor.moveToFirst()){
+    		title.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_NAME)));
+    		originalTitle = title.getText().toString();
+    		//description.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DESCRIPTION)));
+        	if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_THUMBNAIL_PATH))){
+        		//Log.d("optimal_width",String.valueOf(seekBar.getWidth()));
+        		//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),preview_width, preview_height);
+        		bmf = new BitmapFactory();
+        		preview.setImageBitmap(bmf.decodeFile(cursor.getString(cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_THUMBNAIL_PATH))));
+        		preview.setVisibility(View.VISIBLE);
+        		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
+        			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
+        			if(seekBar.getMax() > 1){
+        				Log.v("progressMAX", String.valueOf(seekBar.getMax()));
+        				seekBar.setVisibility(View.VISIBLE);
+        				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
+        			}
+        			timelapse_dir = cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+        		}
+        	}
         }
         preview_is_fresh = true;
+        cursor.close();
     }
     
     @Override
     protected void onPause(){
     	super.onPause();
-    	// Save title / description
+    	
     	// User may be switching to cameraActivity, so signal the preview must be refreshed onResume
     	preview_is_fresh = false;
     	Log.d("TimeLapseViewer onPause","TL id: " + _id);
+    	
+    	// Save title if changed
+    	// if new nonblank title input
+    	if( (title.getText().toString().compareTo("") == 0 ) 
+    			&& ( title.getText().toString().compareTo(originalTitle) != 0) ){
+			return;
+		}
+		else{
+			tla.updateTimeLapseById(_id, new String[] {SQLiteWrapper.COLUMN_NAME}, 
+												  new String[] {title.getText().toString()});
+			//Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
+            //startActivity(intent);
+		}	
     	
     }
     
@@ -130,8 +142,9 @@ public class TimeLapseViewerActivity extends Activity {
 	    	if(cursor.moveToFirst()){
 	        	if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
 	        		//Log.d("optimal_width",String.valueOf(seekBar.getWidth()));
-	        		Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),preview_width, preview_height);
-	        		preview.setImageBitmap(optimal_bitmap);
+	        		//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)),preview_width, preview_height);
+	        		//preview.setImageBitmap(optimal_bitmap);
+	        		preview.setImageBitmap(bmf.decodeFile(cursor.getString(cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_THUMBNAIL_PATH))));
 	        		preview.setVisibility(View.VISIBLE);
 	        		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
 	        			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
@@ -143,6 +156,7 @@ public class TimeLapseViewerActivity extends Activity {
 	        	}
 	        }
 	    	preview_is_fresh = true;
+	    	cursor.close();
 		}
         
     }
@@ -173,7 +187,7 @@ public class TimeLapseViewerActivity extends Activity {
         }
     }
     
-    
+    /*
     // Save changes to current timelapse
     private OnClickListener saveTimeLapseListener = new OnClickListener(){
 
@@ -183,23 +197,14 @@ public class TimeLapseViewerActivity extends Activity {
 				return;
 			}
 			else{
-				tla.updateTimeLapseById(_id, new String[] {SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION }, 
-													  new String[] {title.getText().toString(), description.getText().toString()});
+				tla.updateTimeLapseById(_id, new String[] {SQLiteWrapper.COLUMN_NAME}, 
+													  new String[] {title.getText().toString()});
 				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
                 startActivity(intent);
-				/*
-				if(tla.time_lapse_map.containsKey(timelapse_id)){
-		    		tla.setTimeLapseTitleAndDescription(timelapse_id, title.getText().toString(), description.getText().toString());
-		    		//findViewById(R.id.create_timelapse_button).setVisibility(View.GONE);
-					Log.d("TimeLapse Modified",title.getText().toString() + " " + description.getText().toString());
-					Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
-					// Signal BrowserActivity to update ListView
-					//intent.putExtra("updateListView", true);
-	                startActivity(intent);
-		    	}*/
 			}	
 		}
     };
+    */
     
     // Create a new timelapse
     private OnClickListener createTimeLapseListener = new OnClickListener(){
@@ -210,11 +215,12 @@ public class TimeLapseViewerActivity extends Activity {
 				return;
 			}
 			else{
-				Uri new_timelapse = tla.createTimeLapse(new String[]{SQLiteWrapper.COLUMN_NAME, SQLiteWrapper.COLUMN_DESCRIPTION},
-									new String[]{title.getText().toString(), description.getText().toString()});
-				//Uri new_timelapse_uri = Uri.parse(TimeLapseContentProvider.AUTHORITY_URI.toString() + new_timelapse.toString());
-				//Cursor cursor = getContentResolver().query(new_timelapse_uri, null, null, null, null);
-				
+				Uri new_timelapse = tla.createTimeLapse(new String[]{SQLiteWrapper.COLUMN_NAME },
+									new String[]{title.getText().toString() });
+				Uri new_timelapse_uri = Uri.parse(TimeLapseContentProvider.AUTHORITY_URI.toString() + new_timelapse.toString());
+				Cursor cursor = getContentResolver().query(new_timelapse_uri, null, null, null, null);
+				if(cursor.moveToFirst())
+					Log.d("TimeLapseCreated","name: " + cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_NAME)));
 				//Log.d("TimeLapseCreated","passing id to camera: " + new_timelapse.getLastPathSegment().toString());
 				Intent intent = new Intent(TimeLapseViewerActivity.this, CameraActivity.class);
 				if(new_timelapse != null){
@@ -226,6 +232,7 @@ public class TimeLapseViewerActivity extends Activity {
 				// Intent.FLAG_ACTIVITY_CLEAR_TOP will allow gallery to live-load images just taken on newly created TimeLapse
 				intent.setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP);
                 startActivity(intent);
+                cursor.close();
 			}
 		}
     };
@@ -238,10 +245,12 @@ public class TimeLapseViewerActivity extends Activity {
 				
 			Log.v("Seek",String.valueOf(progress));
 			//Log.d("preview size", String.valueOf(width)+ "x" + String.valueOf(height));
-			Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + "/" + String.valueOf(progress+1)+".jpeg", preview_width, preview_height);
+			//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + "/" + String.valueOf(progress+1)+".jpeg", preview_width, preview_height);
 			
 			//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + File.pathSeparator + String.valueOf(progress)+".jpeg", 640, 480);
-			preview.setImageBitmap(optimal_bitmap);
+			//preview.setImageBitmap(optimal_bitmap);
+			
+			preview.setImageBitmap(bmf.decodeFile(timelapse_dir + "/" + TimeLapse.thumbnail_dir + "/" + String.valueOf(progress+1)+TimeLapse.thumbnail_suffix + ".jpeg"));
 		}
 
 		@Override
