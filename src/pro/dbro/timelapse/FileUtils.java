@@ -28,6 +28,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -38,6 +39,11 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class FileUtils {
 	
@@ -341,7 +347,7 @@ public class FileUtils {
 						}
 						 
 						
-						
+						TimeLapseViewerActivity.exporting = false;
 						result.close();
 						return true;
 					}
@@ -352,8 +358,19 @@ public class FileUtils {
 				@Override
 			    protected void onPostExecute(Boolean result) {
 					// Don't need to send a message indicating this is complete
-					//sendMessage(result);
+					//sendMessage(result)
 					super.onPostExecute(result);
+					Context c = BrowserActivity.getContext();
+					LayoutInflater inflater = (LayoutInflater)c.getSystemService
+						      (Context.LAYOUT_INFLATER_SERVICE);
+            		View layout = inflater.inflate(R.layout.export_toast,
+            		                               null);
+            		((TextView)layout.findViewById(R.id.text)).setText("Gif Saved");
+            		Toast toast = new Toast(c);
+            		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            		toast.setDuration(Toast.LENGTH_LONG);
+            		toast.setView(layout);
+            		toast.show();
 			    }
 				
 			}

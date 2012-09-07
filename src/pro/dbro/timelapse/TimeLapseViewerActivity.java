@@ -15,6 +15,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -27,6 +29,7 @@ import android.widget.ListAdapter;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 public class TimeLapseViewerActivity extends Activity {
 	
@@ -44,6 +47,8 @@ public class TimeLapseViewerActivity extends Activity {
 	private int preview_width = 0;
 	private int preview_height = 0;
 	private String timelapse_dir;
+	
+	public static boolean exporting = false;
 	
 	private int _id = -1;
 	
@@ -173,6 +178,14 @@ public class TimeLapseViewerActivity extends Activity {
         
     }
     
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu){
+    	if(exporting)
+    		menu.removeItem(R.id.menu_export);
+    	
+    	return true;
+    }
+    
     // Handle ActionBar Events
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -184,8 +197,21 @@ public class TimeLapseViewerActivity extends Activity {
                 startActivity(intent);
             case R.id.menu_export:
             	// make GIF
-            	if(_id != -1)
+            	if(_id != -1 && !exporting){
+            		exporting = true;
             		new FileUtils.saveGif().execute(_id);
+            		item.setEnabled(false);
+            		
+            		LayoutInflater inflater = getLayoutInflater();
+            		View layout = inflater.inflate(R.layout.export_toast,
+            		                               null);
+
+            		Toast toast = new Toast(getApplicationContext());
+            		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            		toast.setDuration(Toast.LENGTH_LONG);
+            		toast.setView(layout);
+            		toast.show();
+            	}
             	
             	
             	
