@@ -299,6 +299,8 @@ public class FileUtils {
 	
 	// Save a picture (given as byte[]) to the filesystem
 			public static class saveGif extends AsyncTask<Integer, Void, Boolean>{
+				
+				private static String gifPath;
 
 				// This method is executed in a separate thread
 				@Override
@@ -317,6 +319,7 @@ public class FileUtils {
 						FileOutputStream bos;
 						try {
 							File resultFile = new File(tlPath, "jiffy.gif");
+							gifPath = resultFile.getAbsolutePath();
 							bos = new FileOutputStream(resultFile);
 							Log.d("gif","output gif: " + String.valueOf(resultFile.getAbsolutePath()));
 							AnimatedGifEncoder encoder = new AnimatedGifEncoder();
@@ -365,7 +368,9 @@ public class FileUtils {
 						      (Context.LAYOUT_INFLATER_SERVICE);
             		View layout = inflater.inflate(R.layout.export_toast,
             		                               null);
-            		((TextView)layout.findViewById(R.id.text)).setText("Gif Saved");
+            		if(gifPath != null)
+            			((TextView)layout.findViewById(R.id.text)).setText(gifPath + " saved!");
+            			
             		Toast toast = new Toast(c);
             		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
             		toast.setDuration(Toast.LENGTH_LONG);
