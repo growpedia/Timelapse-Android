@@ -115,7 +115,7 @@ public class TimeLapseViewerActivity extends Activity {
     	// Save title if changed
     	// if new nonblank title input
     	if( (title.getText().toString().compareTo("") == 0 ) 
-    			&& ( title.getText().toString().compareTo(originalTitle) != 0) ){
+    			|| ( title.getText().toString().compareTo(originalTitle) == 0) ){
 			return;
 		}
 		else{
@@ -182,6 +182,13 @@ public class TimeLapseViewerActivity extends Activity {
             	Intent intent = new Intent(TimeLapseViewerActivity.this, CameraActivity.class);
             	intent.putExtra("_id", _id); // indicate TimeLapseViewerActivity to create a new TimeLapse
                 startActivity(intent);
+            case R.id.menu_export:
+            	// make GIF
+            	if(_id != -1)
+            		new FileUtils.saveGif().execute(_id);
+            	
+            	
+            	
             default:
                 return super.onOptionsItemSelected(item);
         }

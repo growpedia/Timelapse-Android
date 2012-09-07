@@ -35,9 +35,9 @@
         android:gravity="center_vertical"
         android:padding="2dp"
         android:shadowColor="#000000"
-        android:shadowDx="5.0"
-        android:shadowDy="5.0"
-        android:shadowRadius="5.0"
+        android:shadowDx="8.0"
+        android:shadowDy="2.0"
+        android:shadowRadius="2.0"
         android:singleLine="true"
         android:text="New"
         android:textSize="45dip" >
@@ -56,7 +56,7 @@
 	    android:contentDescription="Camera"
 	    android:layout_marginTop="15dp"
 	    android:layout_marginBottom="15dp"
-	    android:src="@drawable/camera"
+	    android:src="@drawable/ic_action_camera"
 	    android:visibility="visible" />
 
 

@@ -1,4 +1,6 @@
 package pro.dbro.timelapse;
+// Thanks nbadal!
+// https://github.com/nbadal/android-gif-encoder
 
 import java.io.IOException;
 import java.io.OutputStream;

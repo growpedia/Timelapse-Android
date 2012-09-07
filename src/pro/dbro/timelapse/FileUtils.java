@@ -2,6 +2,7 @@ package pro.dbro.timelapse;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -29,6 +30,7 @@ import com.google.gson.JsonSerializer;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -288,6 +290,73 @@ public class FileUtils {
 		}
 		
 	}
+	
+	// Save a picture (given as byte[]) to the filesystem
+			public static class saveGif extends AsyncTask<Integer, Void, Boolean>{
+
+				// This method is executed in a separate thread
+				@Override
+				protected Boolean doInBackground(Integer... input) {
+					if(input[0] == -1){
+						Log.d(TAG,"Error: no _id given");
+						return false;
+					}
+					
+					TimeLapseApplication tla = BrowserActivity.getContext();
+					
+					Cursor result = tla.getTimeLapseById(input[0], null);
+					if(result.moveToFirst()){
+						int image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+						String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+						FileOutputStream bos;
+						try {
+							File resultFile = new File(tlPath, "jiffy.gif");
+							bos = new FileOutputStream(resultFile);
+							Log.d("gif","output gif: " + String.valueOf(resultFile.getAbsolutePath()));
+							AnimatedGifEncoder encoder = new AnimatedGifEncoder();
+							encoder.start(bos);
+							
+							for(int x = 1; x <= image_count; x++){
+								encoder.addFrame(FileUtils.decodeSampledBitmapFromResource(tlPath + "/" + String.valueOf(x)+".jpeg", 640, 480));
+								Log.d("gif","adding frame " + String.valueOf(x));
+								//encoder.addFrame
+							}
+							Log.d("gif","gif'n complete");
+							encoder.finish();
+							//out = new BufferedOutputStream(new FileOutputStream(file));
+							bos.write(input[0]);
+				            try {
+								bos.close();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+								Log.d("gif","IO error: " + e.getLocalizedMessage());
+							}
+						} catch (FileNotFoundException e1) {
+							Log.d("gif","FileNotFound error: " + e1.getLocalizedMessage());
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							Log.d("gif","IO error: " + e1.getLocalizedMessage());
+							e1.printStackTrace();
+						}
+						 
+						
+						
+						result.close();
+						return true;
+					}
+					result.close();
+					return false;
+				}
+				
+				@Override
+			    protected void onPostExecute(Boolean result) {
+					// Don't need to send a message indicating this is complete
+					//sendMessage(result);
+					super.onPostExecute(result);
+			    }
+				
+			}
 	
 		// Save a picture (given as byte[]) to the filesystem
 		public static class SavePictureOnFilesystem extends AsyncTask<byte[], Void, String>{

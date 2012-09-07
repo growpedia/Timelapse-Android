@@ -29,7 +29,7 @@
         android:layout_above="@id/seekBar"
         android:layout_below="@id/create_timelapse_title"
         android:layout_gravity="center"
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
         android:visibility="gone" />
 
 </RelativeLayout>

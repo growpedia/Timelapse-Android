@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/menu_camera"
-          android:icon="@drawable/ic_action_camera"
-          android:showAsAction="ifRoom" />
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/menu_export"
+        android:icon="@drawable/ic_action_export"
+        android:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/menu_camera"
+        android:icon="@drawable/ic_action_camera"
+        android:showAsAction="ifRoom"/>
+
 </menu>
