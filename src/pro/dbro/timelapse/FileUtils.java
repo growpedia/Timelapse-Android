@@ -316,9 +316,10 @@ public class FileUtils {
 					if(result.moveToFirst()){
 						int image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
 						String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+						String name = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_NAME));
 						FileOutputStream bos;
 						try {
-							File resultFile = new File(tlPath, "jiffy.gif");
+							File resultFile = new File(tlPath, name+".gif");
 							gifPath = resultFile.getAbsolutePath();
 							bos = new FileOutputStream(resultFile);
 							Log.d("gif","output gif: " + String.valueOf(resultFile.getAbsolutePath()));
