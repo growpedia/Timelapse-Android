@@ -3,6 +3,8 @@ package pro.dbro.timelapse;
 import java.io.File;
 import java.util.ArrayList;
 
+import pro.dbro.timelapse.service.GifExportService;
+
 import android.app.Activity;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -47,9 +49,7 @@ public class TimeLapseViewerActivity extends Activity {
 	private int preview_width = 0;
 	private int preview_height = 0;
 	private String timelapse_dir;
-	
-	public static boolean exporting = false;
-	
+		
 	private int _id = -1;
 	
 	BitmapFactory bmf = new BitmapFactory();
@@ -180,7 +180,7 @@ public class TimeLapseViewerActivity extends Activity {
     
     @Override
     public boolean onPrepareOptionsMenu(Menu menu){
-    	if(exporting)
+    	if(tla.serviceIsRunning())
     		menu.removeItem(R.id.menu_export);
     	
     	return true;
@@ -197,8 +197,8 @@ public class TimeLapseViewerActivity extends Activity {
                 startActivity(intent);
             case R.id.menu_export:
             	// make GIF
-            	if(_id != -1 && !exporting){
-            		exporting = true;
+            	if(_id != -1 && !tla.serviceIsRunning()){
+            		/*
             		new FileUtils.saveGif().execute(_id);
             		item.setEnabled(false);
             		
@@ -211,6 +211,11 @@ public class TimeLapseViewerActivity extends Activity {
             		toast.setDuration(Toast.LENGTH_LONG);
             		toast.setView(layout);
             		toast.show();
+            		*/
+            		Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
+                	i.putExtra("_id", _id);
+                	Log.d("SERVICE","Starting");
+                	startService(i);
             	}
             	
             	

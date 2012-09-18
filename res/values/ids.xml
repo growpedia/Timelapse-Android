@@ -15,4 +15,7 @@
 <item type="id" name="filesystem_parse_complete" />
 <item type="id" name="filesystem_modified" />
 
+<!-- Gif Export Service -->
+<item type="id" name="export_service_notification" />
+
 </resources>

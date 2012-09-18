@@ -16,7 +16,7 @@ import android.util.Log;
  * requires Strings: DATABASE_NAME, DATABASE_VERSION,
  * CREATE_TABLE_STATEMENT, TABLE_NAME
  */
-class SQLiteWrapper extends SQLiteOpenHelper {
+public class SQLiteWrapper extends SQLiteOpenHelper {
 	
 	//DATABASE INFO
     public static final String DATABASE_NAME = "timelapse.db";

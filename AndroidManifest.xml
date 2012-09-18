@@ -8,7 +8,7 @@
         android:minSdkVersion="8"
         android:targetSdkVersion="11" />
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature android:name="android.hardware.camera" />
@@ -21,10 +21,11 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
         <provider
-       		android:authorities="pro.dbro.timelapse.timelapsecontentprovider"
-       		android:name=".TimeLapseContentProvider"
-       		android:exported="false" >
-		</provider> 
+            android:name=".TimeLapseContentProvider"
+            android:authorities="pro.dbro.timelapse.timelapsecontentprovider"
+            android:exported="false" >
+        </provider>
+
         <activity
             android:name=".BrowserActivity"
             android:label="@string/app_name"
@@ -44,7 +45,11 @@
             android:name=".TimeLapseViewerActivity"
             android:label="@string/app_name" >
         </activity>
-        <activity android:name="com.crittercism.NotificationActivity"/>
+        <activity android:name="com.crittercism.NotificationActivity" />
+
+        <service
+            android:name=".service.GifExportService"
+            android:enabled="true" />
     </application>
 
 </manifest>

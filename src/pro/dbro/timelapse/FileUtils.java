@@ -338,7 +338,6 @@ public class FileUtils {
 				            try {
 								bos.close();
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 								Log.d("gif","IO error: " + e.getLocalizedMessage());
 							}
@@ -351,7 +350,7 @@ public class FileUtils {
 						}
 						 
 						
-						TimeLapseViewerActivity.exporting = false;
+						//TimeLapseViewerActivity.exporting = false;
 						result.close();
 						return true;
 					}
@@ -605,6 +604,7 @@ public class FileUtils {
 			  result.addProperty("modified_date", src.getAsString(SQLiteWrapper.COLUMN_MODIFIED_DATE));
 			  result.addProperty("id", src.getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
 			  result.addProperty("image_count", src.getAsInteger(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+			  
 		    return result;
 		  }
 	}

@@ -7,7 +7,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 
+import android.app.ActivityManager;
 import android.app.Application;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -174,7 +176,6 @@ public class TimeLapseApplication extends Application {
 		contentValues.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, iso8601Format.format(now));
 		
 		contentValues.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, 0);
-
 		contentValues.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, String.valueOf(next_timelapse_id));
 		
 		
@@ -184,5 +185,15 @@ public class TimeLapseApplication extends Application {
 		Log.d("TimeLapseCollision","Writing from CreateTimeLapse");
 		cursor.close();
 		return getContentResolver().insert(TimeLapseContentProvider.CONTENT_URI, contentValues);
+	}
+	
+	public boolean serviceIsRunning() {
+	    ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+	    for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+	        if ("pro.dbro.timelapse.service.GifExportService".equals(service.service.getClassName())) {
+	            return true;
+	        }
+	    }
+	    return false;
 	}
 }

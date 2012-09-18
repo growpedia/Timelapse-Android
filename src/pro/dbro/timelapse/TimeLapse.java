@@ -113,6 +113,6 @@ public class TimeLapse implements Serializable{
 		    public int compare(TimeLapse object1, TimeLapse object2) {
 		        return object1.modified_date.compareTo(object2.modified_date);
 		    }
-		}
+	}
 
 }
