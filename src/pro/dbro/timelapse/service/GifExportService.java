@@ -20,6 +20,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -30,7 +31,8 @@ public class GifExportService extends IntentService {
 	
 	private NotificationManager mNM;
 	private Notification notification; // keep an instance of the notification to update time text
-	private int NOTIFICATION = R.id.export_service_notification;
+	private int EXPORTING_NOTIFICATION = R.id.export_service_notification;
+	private int COMPLETE_NOTIFICATION = R.id.export_service_notification_complete;
 	
 	private PendingIntent contentIntent; // The intent to fire when notification clicked
 
@@ -53,7 +55,7 @@ public class GifExportService extends IntentService {
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
-		mNM.cancel(NOTIFICATION);
+		mNM.cancel(EXPORTING_NOTIFICATION);
 	}
 
 	@Override
@@ -92,7 +94,7 @@ public class GifExportService extends IntentService {
 			notification = builder.getNotification();
 		}
 		
-		mNM.notify(NOTIFICATION, notification);
+		mNM.notify(EXPORTING_NOTIFICATION, notification);
 	}
 	
 	@SuppressLint("NewApi")
@@ -115,8 +117,30 @@ public class GifExportService extends IntentService {
 					//.setProgress(100,0,false)
 					notification = builder.getNotification();
 				}
-				mNM.notify(NOTIFICATION, notification);
+				mNM.notify(EXPORTING_NOTIFICATION, notification);
 		
+	}
+	
+	@SuppressLint("NewApi")
+	private void showCompleteNotification(File result){
+		Notification.Builder builder = new Notification.Builder(c);
+		
+		Uri file_uri = Uri.parse("file://" + result.getAbsolutePath());
+		Intent notificationIntent = new Intent(Intent.ACTION_VIEW, file_uri);
+		notificationIntent.setDataAndType(file_uri, "image/gif");
+		PendingIntent contentIntent = PendingIntent.getActivity(GifExportService.this, 0, notificationIntent,0);
+		
+		builder.setContentIntent(contentIntent);
+		
+		builder.setSmallIcon(R.drawable.ic_stat_timelapse)
+		.setTicker(result.getName() + ".GIF Exported!")
+		.setWhen(0)
+		.setContentText("Touch to view")
+		.setContentTitle(result.getName() + " Exported!");
+		
+		notification = builder.getNotification();
+		
+		mNM.notify(COMPLETE_NOTIFICATION, notification);
 	}
 	
 	public void generateGif(int _id){
@@ -152,6 +176,8 @@ public class GifExportService extends IntentService {
 				encoder.finish();
 				//out = new BufferedOutputStream(new FileOutputStream(file));
 				bos.write(_id);
+				// show notification offering to open file
+				showCompleteNotification(resultFile);
 	            try {
 					bos.close();
 				} catch (IOException e) {
@@ -167,6 +193,7 @@ public class GifExportService extends IntentService {
 			}
 			 			
 			result.close();
+			
 		
 		}
 	}

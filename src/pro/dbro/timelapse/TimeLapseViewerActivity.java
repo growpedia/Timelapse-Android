@@ -3,11 +3,14 @@ package pro.dbro.timelapse;
 import pro.dbro.timelapse.service.GifExportService;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
@@ -266,6 +269,7 @@ public class TimeLapseViewerActivity extends Activity {
         	i.putExtra("_id", _id);
         	Log.d("SERVICE","Starting");
         	startService(i);
+        	exportButton.setEnabled(false);
 		}
     };
 }

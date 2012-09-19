@@ -17,5 +17,6 @@
 
 <!-- Gif Export Service -->
 <item type="id" name="export_service_notification" />
+<item type="id" name="export_service_notification_complete" />
 
 </resources>
