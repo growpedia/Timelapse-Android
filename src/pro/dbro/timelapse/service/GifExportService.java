@@ -63,16 +63,16 @@ public class GifExportService extends IntentService {
 	}
 	
 	@SuppressLint("NewApi")
-	private void showNotification(){
+	private void showNotification(String name){
 		// in ICS+, Progress bar notification is pre-rolled
 		if(Build.VERSION.SDK_INT >= 14){
 			Notification.Builder builder = new Notification.Builder(c);
 			if(contentIntent != null)
 				builder.setContentIntent(contentIntent);
 			builder.setSmallIcon(R.drawable.ic_stat_timelapse)
-			.setTicker(getString(R.string.notification_export_ticker))
+			.setTicker("Exporting " + name + ".GIF")
 			.setWhen(0)
-			.setContentTitle(getString(R.string.notification_export_title))
+			.setContentTitle("Exporting " + name + ".GIF")
 			.setProgress(image_count,0,false)
 			.setOngoing(true).setOnlyAlertOnce(true);
 			notification = builder.getNotification();
@@ -85,7 +85,7 @@ public class GifExportService extends IntentService {
 				builder.setContentIntent(contentIntent);
 			builder.setSmallIcon(R.drawable.ic_stat_timelapse)
 			.setTicker(getString(R.string.notification_export_ticker))
-			.setContentTitle(getString(R.string.notification_export_title))
+			.setContentTitle("Exporting " + name + ".GIF")
 			.setWhen(0)
 			//.setProgress(100,0,false)
 			.setOngoing(true).setOnlyAlertOnce(true);
@@ -100,10 +100,8 @@ public class GifExportService extends IntentService {
 		// in ICS+, Progress bar notification is pre-rolled
 				if(Build.VERSION.SDK_INT >= 14 && progress <= image_count){
 					Notification.Builder builder = new Notification.Builder(c)
-					.setContentTitle(getString(R.string.notification_export_title))
 					.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setProgress(image_count,progress,false)
-					.setOngoing(true)
 					.setWhen(0);
 					notification = builder.getNotification();
 				}
@@ -111,10 +109,8 @@ public class GifExportService extends IntentService {
 				// not doing that atm
 				else{
 					NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
-					.setContentTitle(getString(R.string.notification_export_title))
 					.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setWhen(0)
-					.setOngoing(true)
 					.setContentText("Processing frame " + String.valueOf(progress) + " of " + String.valueOf(image_count));
 					//.setProgress(100,0,false)
 					notification = builder.getNotification();
@@ -134,9 +130,9 @@ public class GifExportService extends IntentService {
 		Cursor result = tla.getTimeLapseById(_id, null);
 		if(result.moveToFirst()){
 			image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
-			showNotification();
 			String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
 			String name = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_NAME));
+			showNotification(name);
 			FileOutputStream bos;
 			try {
 				File resultFile = new File(tlPath, name+".gif");

@@ -1,43 +1,24 @@
 package pro.dbro.timelapse;
 
-import java.io.File;
-import java.util.ArrayList;
-
 import pro.dbro.timelapse.service.GifExportService;
 
 import android.app.Activity;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.SimpleAdapter;
-import android.widget.TextView;
-import android.widget.Toast;
 
 public class TimeLapseViewerActivity extends Activity {
 	
@@ -48,7 +29,8 @@ public class TimeLapseViewerActivity extends Activity {
 	String originalTitle = "";
 	private EditText title;
 	//private EditText description;
-	//private Button actionButton;
+	private ImageButton cameraButton;
+	private ImageButton exportButton;
 	private ImageView preview;
 	private SeekBar seekBar;
 	
@@ -72,8 +54,11 @@ public class TimeLapseViewerActivity extends Activity {
         setContentView(R.layout.timelapse);
         
         title = (EditText) findViewById(R.id.create_timelapse_title);
-        //description = (EditText) findViewById(R.id.create_timelapse_description);
-        //actionButton =  (Button) findViewById(R.id.create_timelapse_button);
+        cameraButton = (ImageButton) findViewById(R.id.camera_button);
+        exportButton =  (ImageButton) findViewById(R.id.export_button);
+        cameraButton.setOnClickListener(cameraButtonListener);
+		exportButton.setOnClickListener(exportButtonListener);
+        
         preview = (ImageView) findViewById(R.id.previewImage);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         tla = (TimeLapseApplication)this.getApplicationContext();
@@ -110,6 +95,12 @@ public class TimeLapseViewerActivity extends Activity {
         		}
         	}
         }
+    	// Else this timelapse is not yet created
+    	// We shouldn't encounter this state
+    	else{
+    		exportButton.setEnabled(false);
+    		cameraButton.setEnabled(false);
+    	}
         preview_is_fresh = true;
         cursor.close();
     }
@@ -221,55 +212,6 @@ public class TimeLapseViewerActivity extends Activity {
     }
     */
     
-    /*
-    // Save changes to current timelapse
-    private OnClickListener saveTimeLapseListener = new OnClickListener(){
-
-		@Override
-		public void onClick(View v) {
-			if(title.getText().toString().compareTo("") == 0){
-				return;
-			}
-			else{
-				tla.updateTimeLapseById(_id, new String[] {SQLiteWrapper.COLUMN_NAME}, 
-													  new String[] {title.getText().toString()});
-				Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
-                startActivity(intent);
-			}	
-		}
-    };
-    */
-    
-    // Create a new timelapse
-    private OnClickListener createTimeLapseListener = new OnClickListener(){
-
-		@Override
-		public void onClick(View v) {
-			if(title.getText().toString().compareTo("") == 0){
-				return;
-			}
-			else{
-				Uri new_timelapse = tla.createTimeLapse(new String[]{SQLiteWrapper.COLUMN_NAME },
-									new String[]{title.getText().toString() });
-				Uri new_timelapse_uri = Uri.parse(TimeLapseContentProvider.AUTHORITY_URI.toString() + new_timelapse.toString());
-				Cursor cursor = getContentResolver().query(new_timelapse_uri, null, null, null, null);
-				if(cursor.moveToFirst())
-					Log.d("TimeLapseCreated","name: " + cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_NAME)));
-				//Log.d("TimeLapseCreated","passing id to camera: " + new_timelapse.getLastPathSegment().toString());
-				Intent intent = new Intent(TimeLapseViewerActivity.this, CameraActivity.class);
-				if(new_timelapse != null){
-					//timelapse_id = cursor.getInt(cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
-					_id = Integer.parseInt(new_timelapse.getLastPathSegment().toString());
-					Log.d("TimeLapseCreated","passing id to camera: " + new_timelapse.getLastPathSegment().toString());
-					intent.putExtra("_id", _id);
-				}
-				// Intent.FLAG_ACTIVITY_CLEAR_TOP will allow gallery to live-load images just taken on newly created TimeLapse
-				intent.setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP);
-                startActivity(intent);
-                cursor.close();
-			}
-		}
-    };
     
     private OnSeekBarChangeListener onSeekBarChangeListener = new OnSeekBarChangeListener(){
 
@@ -305,4 +247,25 @@ public class TimeLapseViewerActivity extends Activity {
         InputMethodManager imm = (InputMethodManager)tla.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getApplicationWindowToken(), 0);
       }
+    
+    OnClickListener cameraButtonListener = new OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+			Intent intent = new Intent(TimeLapseViewerActivity.this, CameraActivity.class);
+        	intent.putExtra("_id", _id); // indicate TimeLapseViewerActivity to create a new TimeLapse
+            startActivity(intent);
+		}
+    };
+    
+    OnClickListener exportButtonListener = new OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+			Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
+        	i.putExtra("_id", _id);
+        	Log.d("SERVICE","Starting");
+        	startService(i);
+		}
+    };
 }
