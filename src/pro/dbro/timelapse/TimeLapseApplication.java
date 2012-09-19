@@ -135,7 +135,7 @@ public class TimeLapseApplication extends Application {
 		// If no title provided, use a sensible default
 		if(columns == null || !Arrays.asList(columns).contains(SQLiteWrapper.COLUMN_NAME)){
 			SimpleDateFormat humanFormat = new SimpleDateFormat(
-		            "MM/dd/yy H:m");
+		            "MM/dd/yy H:mm");
 			contentValues.put(SQLiteWrapper.COLUMN_NAME, humanFormat.format(now));
 		}
 		

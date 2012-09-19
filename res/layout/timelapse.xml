@@ -16,6 +16,42 @@
         android:hint="@string/create_timelapse_dialog_title_hint"
         android:textSize="30dp" />
 
+    <ImageButton
+        android:id="@+id/camera_button"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/create_timelapse_title"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="0dp"
+        android:background="@drawable/camera_button_bg"
+        android:paddingBottom="10dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:paddingTop="10dp"
+        android:src="@drawable/camera_lg"
+        android:textColor="@drawable/camera_button_text"
+        android:textStyle="bold" >
+    </ImageButton>
+
+    <ImageButton
+        android:id="@+id/export_button"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/create_timelapse_title"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="0dp"
+        android:background="@drawable/export_button_bg"
+        android:paddingBottom="10dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:paddingTop="10dp"
+        android:src="@drawable/film_lg"
+        android:textColor="@drawable/camera_button_text"
+        android:textStyle="bold" >
+    </ImageButton>
+
     <SeekBar
         android:id="@+id/seekBar"
         android:layout_width="match_parent"

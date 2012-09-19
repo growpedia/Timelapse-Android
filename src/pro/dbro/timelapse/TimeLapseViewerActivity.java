@@ -24,12 +24,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
@@ -65,7 +68,7 @@ public class TimeLapseViewerActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         // With the ActionBar, we no longer need to hide the hideous Android Window Title
-        //requestWindowFeature(Window.FEATURE_NO_TITLE);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.timelapse);
         
         title = (EditText) findViewById(R.id.create_timelapse_title);
@@ -168,6 +171,7 @@ public class TimeLapseViewerActivity extends Activity {
         
     }
     
+    /*
     // Populate ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -179,7 +183,8 @@ public class TimeLapseViewerActivity extends Activity {
     	return true;
         
     }
-    
+    */
+    /*
     @Override
     public boolean onPrepareOptionsMenu(Menu menu){
     	if(tla.serviceIsRunning())
@@ -187,7 +192,9 @@ public class TimeLapseViewerActivity extends Activity {
     	
     	return true;
     }
+    */
     
+    /*
     // Handle ActionBar Events
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -200,20 +207,6 @@ public class TimeLapseViewerActivity extends Activity {
             case R.id.menu_export:
             	// make GIF
             	if(_id != -1 && !tla.serviceIsRunning()){
-            		/*
-            		new FileUtils.saveGif().execute(_id);
-            		item.setEnabled(false);
-            		
-            		LayoutInflater inflater = getLayoutInflater();
-            		View layout = inflater.inflate(R.layout.export_toast,
-            		                               null);
-
-            		Toast toast = new Toast(getApplicationContext());
-            		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-            		toast.setDuration(Toast.LENGTH_LONG);
-            		toast.setView(layout);
-            		toast.show();
-            		*/
             		Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
                 	i.putExtra("_id", _id);
                 	Log.d("SERVICE","Starting");
@@ -226,6 +219,7 @@ public class TimeLapseViewerActivity extends Activity {
                 return super.onOptionsItemSelected(item);
         }
     }
+    */
     
     /*
     // Save changes to current timelapse
