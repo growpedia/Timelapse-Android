@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Create TimeLapse dialog -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<pro.dbro.timelapse.viewgroup.FocusControlRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical" >
 
     <EditText
@@ -10,16 +12,16 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:gravity="center"
         android:hint="@string/create_timelapse_dialog_title_hint"
-        android:textSize="20dp" />
+        android:textSize="30dp" />
 
     <SeekBar
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
+        android:layout_margin="10dp"
         android:visibility="gone" />
 
     <ImageView
@@ -32,4 +34,4 @@
         android:scaleType="fitCenter"
         android:visibility="gone" />
 
-</RelativeLayout>
+</pro.dbro.timelapse.viewgroup.FocusControlRelativeLayout>

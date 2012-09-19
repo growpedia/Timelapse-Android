@@ -70,9 +70,9 @@ public class GifExportService extends IntentService {
 			if(contentIntent != null)
 				builder.setContentIntent(contentIntent);
 			builder.setSmallIcon(R.drawable.ic_stat_timelapse)
-			.setTicker("Exporting .GIF")
+			.setTicker(getString(R.string.notification_export_ticker))
 			.setWhen(0)
-			.setContentTitle("Exporting...")
+			.setContentTitle(getString(R.string.notification_export_title))
 			.setProgress(image_count,0,false)
 			.setOngoing(true).setOnlyAlertOnce(true);
 			notification = builder.getNotification();
@@ -84,8 +84,8 @@ public class GifExportService extends IntentService {
 			if(contentIntent != null)
 				builder.setContentIntent(contentIntent);
 			builder.setSmallIcon(R.drawable.ic_stat_timelapse)
-			.setTicker("Exporting .GIF")
-			.setContentTitle("Exporting...")
+			.setTicker(getString(R.string.notification_export_ticker))
+			.setContentTitle(getString(R.string.notification_export_title))
 			.setWhen(0)
 			//.setProgress(100,0,false)
 			.setOngoing(true).setOnlyAlertOnce(true);
@@ -100,9 +100,10 @@ public class GifExportService extends IntentService {
 		// in ICS+, Progress bar notification is pre-rolled
 				if(Build.VERSION.SDK_INT >= 14 && progress <= image_count){
 					Notification.Builder builder = new Notification.Builder(c)
-					.setContentTitle("Exporting...")
+					.setContentTitle(getString(R.string.notification_export_title))
 					.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setProgress(image_count,progress,false)
+					.setOngoing(true)
 					.setWhen(0);
 					notification = builder.getNotification();
 				}
@@ -110,9 +111,10 @@ public class GifExportService extends IntentService {
 				// not doing that atm
 				else{
 					NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
-					.setContentTitle("Exporting...")
+					.setContentTitle(getString(R.string.notification_export_title))
 					.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setWhen(0)
+					.setOngoing(true)
 					.setContentText("Processing frame " + String.valueOf(progress) + " of " + String.valueOf(image_count));
 					//.setProgress(100,0,false)
 					notification = builder.getNotification();

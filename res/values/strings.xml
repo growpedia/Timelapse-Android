@@ -18,5 +18,8 @@
     <string name="save_timelapse_button">Save</string>
     
     <string name="no_timelapses_found">No TimeLapses Found</string>
-
+    
+    <!--  Service Notification -->
+    <string name="notification_export_ticker">Exporting .GIF</string>
+    <string name="notification_export_title">Exporting .GIF</string>
 </resources>

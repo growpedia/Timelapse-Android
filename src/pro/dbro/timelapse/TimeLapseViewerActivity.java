@@ -8,6 +8,7 @@ import pro.dbro.timelapse.service.GifExportService;
 import android.app.Activity;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -24,6 +25,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -31,11 +33,12 @@ import android.widget.ListAdapter;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class TimeLapseViewerActivity extends Activity {
 	
-	private TimeLapseApplication tla;
+	private static TimeLapseApplication tla;
 	
 	// Store the title when the activity starts
 	// compare to title.getText() during onPause()
@@ -70,7 +73,6 @@ public class TimeLapseViewerActivity extends Activity {
         //actionButton =  (Button) findViewById(R.id.create_timelapse_button);
         preview = (ImageView) findViewById(R.id.previewImage);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
-        
         tla = (TimeLapseApplication)this.getApplicationContext();
         
         Intent intent = getIntent();
@@ -84,7 +86,7 @@ public class TimeLapseViewerActivity extends Activity {
 
             
         Cursor cursor = tla.getTimeLapseById(_id, null);
-    	if(cursor.moveToFirst()){
+    	if(cursor != null && cursor.moveToFirst()){
     		title.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_NAME)));
     		originalTitle = title.getText().toString();
     		//description.setText(cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DESCRIPTION)));
@@ -304,4 +306,9 @@ public class TimeLapseViewerActivity extends Activity {
 		}
     	
     };
+    
+    public static void hideSoftKeyboard (View view) {
+        InputMethodManager imm = (InputMethodManager)tla.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getApplicationWindowToken(), 0);
+      }
 }
