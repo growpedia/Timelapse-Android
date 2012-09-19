@@ -3,6 +3,7 @@ package pro.dbro.timelapse;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
@@ -18,56 +19,6 @@ import android.net.Uri;
 import android.util.Log;
 
 public class TimeLapseApplication extends Application {
-	// id -> TimeLapse
-	public HashMap<Integer,TimeLapse> time_lapse_map = new HashMap<Integer,TimeLapse>();
-	public int nextTimeLapseId = 0;
-	
-	// Singleton
-	private static TimeLapseApplication instance;
-
-    public TimeLapseApplication()
-    {
-        instance = this;
-    }
-
-    public static Context getContext()
-    {
-        return instance;
-    }
-
-	
-	public void setTimeLapses(ArrayList<TimeLapse> list){
-		// Transfer list items into map
-		for(int x = 0; x < list.size(); x++){
-			time_lapse_map.put(((TimeLapse)list.get(x)).id, list.get(x));
-		}
-		setNextTimeLapseId();
-	}
-	
-	public void setTimeLapseTitleAndDescription(int timelapse_id, String title, String description){
-		
-		((TimeLapse)time_lapse_map.get(timelapse_id)).setTitleAndDescription(title, description);
-	}
-	
-	public void createTimeLapse(String title, String description){
-		time_lapse_map.put(nextTimeLapseId, new TimeLapse(title, description, nextTimeLapseId));
-		Log.d("TimeLapseApplication","created TimeLapse " + String.valueOf(nextTimeLapseId));
-		nextTimeLapseId ++;
-		
-	}
-	
-	private void setNextTimeLapseId(){
-		Object[] keys = (Object[]) time_lapse_map.keySet().toArray();
-		// find highest TimeLapse.id
-		for(int x = 0; x < keys.length; x++){
-			if(((TimeLapse)time_lapse_map.get(Integer.parseInt(keys[x].toString()))).id > nextTimeLapseId)
-				nextTimeLapseId = ((TimeLapse)time_lapse_map.get(Integer.parseInt(keys[x].toString()))).id;
-		}
-		// add a 1 to it
-		nextTimeLapseId++;
-		Log.d("TimeLapseApplication","nextID: " + String.valueOf(nextTimeLapseId));
-	}
-	
 	
 	/**
 	 * Content Resolver Wrapper methods
@@ -156,8 +107,10 @@ public class TimeLapseApplication extends Application {
 	 */
 	public Uri createTimeLapse(String[] columns, String[] values){
 		ContentValues contentValues = new ContentValues();
-		for(int x=0;x<columns.length;x++){
-			contentValues.put(columns[x], values[x]);
+		if(columns != null && values != null && columns.length == values.length){
+			for(int x=0;x<columns.length;x++){
+				contentValues.put(columns[x], values[x]);
+			}
 		}
 		// Determine next timelapse_id
 		int next_timelapse_id = 1;
@@ -168,7 +121,8 @@ public class TimeLapseApplication extends Application {
 		//File timelapse_dir = getOutputMediaDir(input[0].getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
 		//Log.d("Directory_path", "" + FileUtils.getOutputMediaDir(next_timelapse_id).getAbsolutePath());
 		contentValues.put(SQLiteWrapper.COLUMN_DIRECTORY_PATH, FileUtils.getOutputMediaDir(next_timelapse_id).getAbsolutePath());
-		
+
+		// Add other initial data
 		Date now = new Date();
 		SimpleDateFormat iso8601Format = new SimpleDateFormat(
 	            "yyyy-MM-dd HH:mm:ss");
@@ -178,14 +132,23 @@ public class TimeLapseApplication extends Application {
 		contentValues.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, 0);
 		contentValues.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, String.valueOf(next_timelapse_id));
 		
+		// If no title provided, use a sensible default
+		if(columns == null || !Arrays.asList(columns).contains(SQLiteWrapper.COLUMN_NAME)){
+			SimpleDateFormat humanFormat = new SimpleDateFormat(
+		            "MM/dd/yy H:m");
+			contentValues.put(SQLiteWrapper.COLUMN_NAME, humanFormat.format(now));
+		}
 		
-		
+
 		// Save TimeLapse to filesystem
 		new FileUtils.SaveTimeLapsesOnFilesystem().execute(contentValues);
 		Log.d("TimeLapseCollision","Writing from CreateTimeLapse");
 		cursor.close();
+		
+		// Save TimeLapse to ContentProvider, returning URI
 		return getContentResolver().insert(TimeLapseContentProvider.CONTENT_URI, contentValues);
 	}
+
 	
 	public boolean serviceIsRunning() {
 	    ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);

@@ -86,19 +86,21 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			Log.d("OnItemClick",String.valueOf(position));
-			//Special behavior for HeaderView
 			
+			// Create Timelapse header list item
         	if(position == 0){
-        		Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
+        		Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
         		intent.putExtra("_id", -1);
         		startActivity(intent);
         	}
+        	// Camera icon within list item
         	else if(((String)view.getTag(R.id.view_onclick_action)).equals("camera")){
 	        	//  launch CameraActivity
 	        	Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
 	        	intent.putExtra("_id", (Integer)view.getTag(R.id.view_related_timelapse));
 	            startActivity(intent);
 	        }
+        	// Elsewhere within list item
 	        else if(((String)view.getTag(R.id.view_onclick_action)).equals("view")){
 	        	Intent intent = new Intent(BrowserActivity.this, TimeLapseViewerActivity.class);
 	        	intent.putExtra("_id", (Integer)view.getTag(R.id.view_related_timelapse));

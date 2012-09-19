@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -121,6 +122,12 @@ public class CameraActivity extends Activity {
         
         _id = intent.getExtras().getInt("_id");
         Log.d("CameraActivity","id received: " + String.valueOf(_id));
+        if(_id == -1){
+        	// create a new timelapse
+        	Uri new_timelapse = c.createTimeLapse(null,null);
+        	_id = Integer.parseInt(new_timelapse.getLastPathSegment());
+        	
+        }
         Cursor timelapse_cursor = c.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
         if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
         	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
