@@ -315,6 +315,7 @@ public class FileUtils {
 					String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
 					File timelapse_directory = new File(tlPath);
 					DeleteRecursive(timelapse_directory);
+					// delete record in ContentProvider
 					tla.deleteTimeLapseById(input[0]);
 
 					result.close();
@@ -329,6 +330,92 @@ public class FileUtils {
 				// Don't need to send a message indicating this is complete
 				//sendMessage(result)
 				super.onPostExecute(result);
+				
+		    }
+			
+			void DeleteRecursive(File fileOrDirectory) {
+			    if (fileOrDirectory.isDirectory())
+			        for (File child : fileOrDirectory.listFiles())
+			            DeleteRecursive(child);
+
+			    fileOrDirectory.delete();
+			}
+			
+		}
+		
+		// Delete Last frame from TimeLapse in ContentProvider and Filesystem
+		public static class deleteLastFrameFromTimeLapse extends AsyncTask<Integer, Void, String>{
+			
+			// This method is executed in a separate thread
+			@Override
+			protected String doInBackground(Integer... input) {
+				if(input[0] == -1){
+					Log.d(TAG,"Error: no _id given");
+					return null;
+				}
+				
+				TimeLapseApplication tla = BrowserActivity.getContext();
+				// Check that image_count -1 is available in image and thumb dir
+				// delete image and thumb corresponding to image_count
+				// updateTimeLapse method to update JSON
+				
+				Cursor result = tla.getTimeLapseById(input[0], null);
+				if(result.moveToFirst()){
+					String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+					int image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+					
+					// If no image exists return
+					if(image_count == 0)
+						return null;
+					
+					// Delete image
+					File to_delete = new File(tlPath,String.valueOf(image_count) + ".jpeg");
+					to_delete.delete();
+					
+					// Delete corresponding thumbnail
+					to_delete = new File(tlPath, TimeLapse.thumbnail_dir);
+					if(to_delete.exists() && to_delete.isDirectory()){
+						to_delete = new File(to_delete, String.valueOf(image_count) + TimeLapse.thumbnail_suffix + ".jpeg");
+						to_delete.delete();
+					}
+					
+					String last_image_path = null;
+					String thumbnail_path = null;
+					if(image_count > 1){
+						File new_last_image = new File(tlPath, String.valueOf(image_count-1) + ".jpeg");
+						if(new_last_image.exists())
+							last_image_path = new_last_image.getAbsolutePath();
+						File new_thumbnail = new File(tlPath, String.valueOf(image_count-1) + ".jpeg");
+						if(new_thumbnail.exists())
+							thumbnail_path = new_thumbnail.getAbsolutePath();
+						
+					}
+					
+					// Update record in ContentProvider and filesystem
+					tla.updateTimeLapseById(input[0],
+							new String[]{SQLiteWrapper.COLUMN_IMAGE_COUNT, SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, SQLiteWrapper.COLUMN_THUMBNAIL_PATH}, 
+							new String[]{String.valueOf(image_count-1), last_image_path, thumbnail_path});
+					// update TimeLapse
+					//tla.getTimeLapseById(input[0], null)
+					
+					// Reflect changes in TimeLapse .json
+					//new FileUtils.SaveTimeLapsesOnFilesystem().execute(SQLiteWrapper.cursorRowToContentValues(tla.getTimeLapseById(input[0], null)));
+					
+					
+					result.close();
+					return last_image_path;
+				}
+				result.close();
+				return null;
+			}
+			
+			@Override
+		    protected void onPostExecute(String result) {
+				// Don't need to send a message indicating this is complete
+				//sendMessage(result)
+				super.onPostExecute(result);
+				if(result != null)
+					CameraActivity.setCameraOverlay(result, false);
 				
 		    }
 			

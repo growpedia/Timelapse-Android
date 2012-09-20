@@ -61,7 +61,7 @@ public class TimeLapseApplication extends Application {
 	
 
 	/**
-	 * Attempt to update a TimeLapse record in the TimeLapseContentProvider.
+	 * Attempt to update a TimeLapse record in the TimeLapseContentProvider and Filesystem.
 	 * Failing this, inserts a new record.
 	 * @param cv ContentValues representing a timelapse object
 	 * @return true if an existing row was updated, false if a new row was created
@@ -88,7 +88,18 @@ public class TimeLapseApplication extends Application {
 		
 		if(numUpdated > 0){
 			Log.d("updateOrInsertTimeLapseByContentValue","success");
-			return true;
+			// If timelapse was updatedin database, get current data and update filesystem
+			Cursor updated_timelapse = getContentResolver().query(
+	        	    TimeLapseContentProvider.CONTENT_URI, // The content URI of the words table
+	        	    null,                				 // The columns to return for each row
+	        	    selectionClause,                    // Selection criteria
+	        	    selectionArgs,                     // Selection criteria
+	        	    null); 
+			if(updated_timelapse != null && updated_timelapse.moveToFirst()){
+				new FileUtils.SaveTimeLapsesOnFilesystem().execute(SQLiteWrapper.cursorRowToContentValues(updated_timelapse));
+				return true;
+			}
+			return false;
 		} else{
 			Log.d("updateOrInsertTimeLapseByContentValue","kindly note that this behavior is currently fucked");
 			//TODO: Add defaults for not null fields

@@ -195,6 +195,12 @@ public class CameraActivity extends Activity {
 	public static void setCameraOverlay(String filepath, boolean showUndo){
     	// Decode the just-captured picture from file and display it 
     	// in the cameraOverlay ImageView
+    	
+    	// if null filePath, clear overlay
+    	if(filepath == null){
+    		cameraOverlay.setVisibility(View.GONE);
+    		return;
+    	}
     	Log.d("setCameraOverlay","path:"+filepath);
     	File imgFile = new  File(filepath);
     	Bitmap optimal_bitmap;
@@ -209,8 +215,7 @@ public class CameraActivity extends Activity {
 
     	    cameraOverlay.setImageBitmap(optimal_bitmap);
     	    // Ensure camera_overlay is visible
-    	    // visibility: 0 : visible, 1 : invisible, 2 : gone
-        	cameraOverlay.setVisibility(0);
+        	cameraOverlay.setVisibility(View.VISIBLE);
         	
         	if(showUndo){
         		// Fade in/out the undo button if sdk allows
@@ -331,8 +336,16 @@ public class CameraActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			// delete last frame
-			
+			// delete last frame. Calls setCameraOverlay when ready
+			new FileUtils.deleteLastFrameFromTimeLapse().execute(_id);
+			/*
+			Cursor timelapse_cursor = c.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
+			if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
+	        	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
+	        		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)), false);
+	        	}
+	        }
+			*/
 		}
 		
 	};	
