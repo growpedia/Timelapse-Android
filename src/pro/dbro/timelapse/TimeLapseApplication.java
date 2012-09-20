@@ -98,6 +98,10 @@ public class TimeLapseApplication extends Application {
 		
 	}
 	
+	public int deleteTimeLapseById(int _id){
+		return getContentResolver().delete(TimeLapseContentProvider.CONTENT_URI.buildUpon().appendPath(String.valueOf(_id)).build(), null, null);
+	}
+	
 	/**
 	 * Given parallel arrays of columns and values, create a timelapse
 	 * in the TimeLapseContentProvider, as well as on the External Filesystem
