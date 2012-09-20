@@ -19,7 +19,40 @@
         android:layout_alignTop="@id/camera_preview"
         android:background="#0000"
         android:scaleType="fitXY"
-        android:src="@drawable/cage"
         android:visibility="gone" />
+
+    <RelativeLayout
+        android:id="@+id/undo_layout"
+        android:layout_width="150dp"
+        android:layout_height="70dp"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="50dp"
+        android:background="@drawable/undo_layout_bg"
+        android:padding="10dp" >
+
+        <TextView
+            android:id="@+id/undo_text"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:padding="2dp"
+            android:text="Undo"
+            android:textColor="#FFFFFF"
+            android:textSize="30dp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/undo_text"
+            android:padding="2dp"
+            android:scaleType="center"
+            android:src="@drawable/undo" />
+    </RelativeLayout>
 
 </RelativeLayout>

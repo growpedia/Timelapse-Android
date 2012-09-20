@@ -3,9 +3,15 @@ package pro.dbro.timelapse;
 import java.io.File;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import pro.dbro.timelapse.R.id;
 
+import android.animation.Animator;
+import android.animation.Animator.AnimatorListener;
+import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -16,18 +22,24 @@ import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewPropertyAnimator;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+@SuppressLint("NewApi")
 public class CameraActivity extends Activity {
 	private Camera mCamera;
 	private static CameraPreview mCameraPreview;
@@ -43,6 +55,17 @@ public class CameraActivity extends Activity {
 	
 	// ImageView overlayed on the Camera preview
 	private static ImageView cameraOverlay;
+	
+	// Undo button
+	private static RelativeLayout undoLayout;
+	
+	// For undo button animations
+	private static ObjectAnimator fadeInAnimator;
+	private static ObjectAnimator fadeOutAnimator;
+	
+	// Animation time constants
+	private final static long FADE_DURATION = 5*1000; // ms
+	private final static long UNDO_DURATION = 1*1000; // ms
 	
 	// TAG to associate with all debug logs originating from this class
 	private static final String TAG = "TimeLapseActivity";
@@ -60,6 +83,9 @@ public class CameraActivity extends Activity {
         c = (TimeLapseApplication)getApplicationContext();
         cameraOverlay = (ImageView) findViewById(id.camera_overlay);
         cameraOverlay.setAlpha(100);
+        
+        undoLayout = (RelativeLayout) findViewById(id.undo_layout);
+        undoLayout.setOnClickListener(undoOnClickListener);
 
         // Obtain camera instance
         mCamera = getCameraInstance();
@@ -80,6 +106,7 @@ public class CameraActivity extends Activity {
 	        // Set shutter touch listener to layout
 	        RelativeLayout container = (RelativeLayout) findViewById(id.container_layout);
 	        container.setOnTouchListener(shutterListener);
+	       
         }
        
     }
@@ -131,7 +158,7 @@ public class CameraActivity extends Activity {
         Cursor timelapse_cursor = c.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
         if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
         	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
-        		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));
+        		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)), false);
         	}
         }
 
@@ -164,7 +191,8 @@ public class CameraActivity extends Activity {
     };
     
     /** Display the just-captured picture as the camera overlay */
-    public static void setCameraOverlay(String filepath){
+    @SuppressLint("NewApi")
+	public static void setCameraOverlay(String filepath, boolean showUndo){
     	// Decode the just-captured picture from file and display it 
     	// in the cameraOverlay ImageView
     	Log.d("setCameraOverlay","path:"+filepath);
@@ -183,6 +211,44 @@ public class CameraActivity extends Activity {
     	    // Ensure camera_overlay is visible
     	    // visibility: 0 : visible, 1 : invisible, 2 : gone
         	cameraOverlay.setVisibility(0);
+        	
+        	if(showUndo){
+        		// Fade in/out the undo button if sdk allows
+        		if(Build.VERSION.SDK_INT >= 12){
+        			undoLayout.setAlpha(0);
+        			undoLayout.setVisibility(View.VISIBLE);
+        			
+        			// Unfortunately the new viewproperyanimator doesn't allow chaining
+        			//undoLayout.animate().alpha(100).setDuration(FADE_DURATION).start();
+        			//undoLayout.animate().alpha(0).setDuration(FADE_DURATION).setStartDelay(UNDO_DURATION).setListener(hideUndoListener);
+        			
+        			// Handle partially complete animations
+        			
+        			// if a previous fadeOutAnimator is running, cancel it and bring Undo Button to full opacity
+        			if(fadeOutAnimator != null && fadeOutAnimator.isStarted()){
+        				fadeOutAnimator.cancel();
+        				undoLayout.setAlpha(100);
+            			undoLayout.setVisibility(View.VISIBLE);
+        			}
+        			// If the previous fadeOutAnimator ended, perform fadeIn before fadeOut
+        			else if(fadeOutAnimator != null && !fadeOutAnimator.isStarted()){
+        				if(fadeInAnimator != null)
+            				fadeInAnimator.cancel();
+            			fadeInAnimator = ObjectAnimator.ofFloat(undoLayout, "alpha", 0, 100);
+            			fadeInAnimator.setStartDelay(200); // avoids choppiness due to simultaneous image loading
+            			fadeInAnimator.setDuration(FADE_DURATION);
+            			fadeInAnimator.start();
+        			}
+        			fadeOutAnimator = ObjectAnimator.ofFloat(undoLayout, "alpha", 100, 0);
+        			fadeOutAnimator.setStartDelay(UNDO_DURATION);
+        			fadeOutAnimator.addListener(hideUndoListener);
+        			fadeOutAnimator.setDuration(FADE_DURATION);
+        			fadeOutAnimator.start();
+        			
+        		} else{
+        			undoLayout.setVisibility(View.VISIBLE);
+        		}
+        	}
     	}
     	
     	mCameraPreview.restartPreview();
@@ -195,6 +261,7 @@ public class CameraActivity extends Activity {
 		int duration = Toast.LENGTH_SHORT;
 
 		Toast toast = Toast.makeText(c, text, duration);
+		toast.setGravity(Gravity.TOP, 0, 10);
 		toast.show();
 		
 	}
@@ -259,5 +326,48 @@ public class CameraActivity extends Activity {
 	private static boolean isSupported(String value, List<String> supported) {
         return supported == null ? false : supported.indexOf(value) >= 0;
     }
-   
+	
+	private View.OnClickListener undoOnClickListener = new View.OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+			// delete last frame
+			
+		}
+		
+	};	
+	
+	// Remove the undo view from the layout when the fade-out animation ends
+	@SuppressLint("NewApi")
+	private static AnimatorListener hideUndoListener = new AnimatorListener(){
+
+		@Override
+		public void onAnimationStart(Animator animation) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@SuppressLint("NewApi")
+		@Override
+		public void onAnimationEnd(Animator animation) {
+			undoLayout.setVisibility(View.GONE);
+			
+		}
+
+		@SuppressLint("NewApi")
+		@Override
+		public void onAnimationCancel(Animator animation) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@SuppressLint("NewApi")
+		@Override
+		public void onAnimationRepeat(Animator animation) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	};
+	   
 }

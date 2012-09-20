@@ -424,7 +424,7 @@ public class FileUtils {
 				// Don't need to send a message indicating this is complete
 				//sendMessage(result);
 				super.onPostExecute(result);
-				CameraActivity.setCameraOverlay(result);
+				CameraActivity.setCameraOverlay(result, true);
 				CameraActivity.taking_picture = false;
 		    }
 			

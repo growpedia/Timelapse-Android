@@ -40,7 +40,7 @@ public class CameraUtils {
 
 		@Override
 		public void onShutter() {
-			// Yield to theh activity to display shutter feedback
+			// Yield to the activity to display shutter feedback
 			CameraActivity.showShutterFeedback();
 		}
 		
