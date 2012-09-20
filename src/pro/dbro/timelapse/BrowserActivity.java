@@ -9,12 +9,14 @@ import java.util.Map;
 
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -26,7 +28,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewPropertyAnimator;
 import android.view.Window;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -81,12 +85,13 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
     }
     
     // Handle listview item select
-    public OnItemClickListener listItemClickListener = new OnItemClickListener(){
+	public OnItemClickListener listItemClickListener = new OnItemClickListener(){
 
+		@SuppressLint("NewApi")
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			Log.d("OnItemClick",String.valueOf(position));
-			
+
 			// Create Timelapse header list item
         	if(position == 0){
         		Intent intent = new Intent(BrowserActivity.this, CameraActivity.class);
@@ -106,6 +111,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 	        	intent.putExtra("_id", (Integer)view.getTag(R.id.view_related_timelapse));
 	            startActivity(intent);
 	        }
+	        
 		}
     	
     };

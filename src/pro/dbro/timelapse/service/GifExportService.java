@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import pro.dbro.timelapse.AnimatedGifEncoder;
 import pro.dbro.timelapse.BrowserActivity;
@@ -19,6 +20,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -104,6 +107,7 @@ public class GifExportService extends IntentService {
 					Notification.Builder builder = new Notification.Builder(c)
 					.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setProgress(image_count,progress,false)
+					.setOngoing(true)
 					.setWhen(0);
 					notification = builder.getNotification();
 				}
@@ -113,6 +117,7 @@ public class GifExportService extends IntentService {
 					NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
 					.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setWhen(0)
+					.setOngoing(true)
 					.setContentText("Processing frame " + String.valueOf(progress) + " of " + String.valueOf(image_count));
 					//.setProgress(100,0,false)
 					notification = builder.getNotification();
@@ -130,12 +135,16 @@ public class GifExportService extends IntentService {
 		notificationIntent.setDataAndType(file_uri, "image/gif");
 		PendingIntent contentIntent = PendingIntent.getActivity(GifExportService.this, 0, notificationIntent,0);
 		
-		builder.setContentIntent(contentIntent);
+		if(isIntentAvailable(c, notificationIntent)){
+			builder.setContentIntent(contentIntent)
+			.setContentText("Touch to view");
+		}else{
+			builder.setContentText("Please install an app that can view .gifs");
+		}
 		
 		builder.setSmallIcon(R.drawable.ic_stat_timelapse)
-		.setTicker(result.getName() + ".GIF Exported!")
+		.setTicker(result.getName() + " Exported!")
 		.setWhen(0)
-		.setContentText("Touch to view")
 		.setContentTitle(result.getName() + " Exported!");
 		
 		notification = builder.getNotification();
@@ -197,5 +206,13 @@ public class GifExportService extends IntentService {
 		
 		}
 	}
+	
+	public static boolean isIntentAvailable(Context ctx, Intent intent) {
+	   final PackageManager mgr = ctx.getPackageManager();
+	   List<ResolveInfo> list =
+	      mgr.queryIntentActivities(intent, 
+	         PackageManager.MATCH_DEFAULT_ONLY);
+	   return list.size() > 0;
+	} 
 
 }

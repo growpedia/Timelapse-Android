@@ -12,7 +12,7 @@ import android.widget.TextView;
 public class TimeLapseCursorAdapter extends SimpleCursorAdapter {
 	
 	public TimeLapseCursorAdapter(Context context, Cursor c){
-		super(context, R.layout.new_browser_list_item, c, new String[]{} , new int[]{}, 0);
+		super(context, R.layout.browser_list_item_3, c, new String[]{} , new int[]{}, 0);
 	}
 
 	
