@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import pro.dbro.timelapse.AnimatedGifEncoder;
@@ -130,10 +131,22 @@ public class GifExportService extends IntentService {
 	private void showCompleteNotification(File result){
 		Notification.Builder builder = new Notification.Builder(c);
 		
+		// Intent to have system view gif
+		/*
 		Uri file_uri = Uri.parse("file://" + result.getAbsolutePath());
 		Intent notificationIntent = new Intent(Intent.ACTION_VIEW, file_uri);
 		notificationIntent.setDataAndType(file_uri, "image/gif");
 		PendingIntent contentIntent = PendingIntent.getActivity(GifExportService.this, 0, notificationIntent,0);
+		*/
+		
+		// Intent to have system share gif
+		Intent notificationIntent = new Intent(Intent.ACTION_SEND);
+		notificationIntent.setType("image/gif");
+
+		notificationIntent.putExtra(Intent.EXTRA_STREAM,
+		  Uri.parse("file://" + result.getAbsolutePath()));
+
+		PendingIntent contentIntent = PendingIntent.getActivity(GifExportService.this, 0, Intent.createChooser(notificationIntent, "Share .GIF"),0);
 		
 		if(isIntentAvailable(c, notificationIntent)){
 			builder.setContentIntent(contentIntent)
@@ -165,6 +178,12 @@ public class GifExportService extends IntentService {
 			image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
 			String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
 			String name = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_NAME));
+			//TODO: Do this proper
+			try {
+				name = java.net.URLEncoder.encode(name, "UTF-8");
+			} catch (UnsupportedEncodingException e2) {
+				e2.printStackTrace();
+			}
 			showNotification(name);
 			FileOutputStream bos;
 			try {
