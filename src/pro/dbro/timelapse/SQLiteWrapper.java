@@ -35,16 +35,20 @@ public class SQLiteWrapper extends SQLiteOpenHelper {
     public static final String COLUMN_TIMELAPSE_ID = "id";
     public static final String COLUMN_LAST_IMAGE_PATH = "last_image_path";
     public static final String COLUMN_THUMBNAIL_PATH = "thumbnail_path";
+    public static final String COLUMN_GIF_STATE = "gif_state";
+    public static final String COLUMN_GIF_PATH = "gif_path";
     
     public static final String[] COLUMNS = {COLUMN_ID, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_CREATION_DATE, COLUMN_MODIFIED_DATE,
-    										COLUMN_IMAGE_COUNT, COLUMN_DIRECTORY_PATH, COLUMN_TIMELAPSE_ID, COLUMN_LAST_IMAGE_PATH, COLUMN_THUMBNAIL_PATH};
+    										COLUMN_IMAGE_COUNT, COLUMN_DIRECTORY_PATH, COLUMN_TIMELAPSE_ID, COLUMN_LAST_IMAGE_PATH, 
+    										COLUMN_THUMBNAIL_PATH, COLUMN_GIF_STATE, COLUMN_GIF_PATH};
     
     public static final String CREATE_TABLE_STATEMENT = "create table " + TABLE_NAME + " ("+ COLUMN_ID +" integer primary key autoincrement, " 
 	        +  COLUMN_NAME + " text not null, "+ COLUMN_DESCRIPTION + " text, " 
 	        +  COLUMN_CREATION_DATE + " text not null, "+ COLUMN_MODIFIED_DATE +" text not null, " 
 	        +  COLUMN_IMAGE_COUNT + " integer not null , " + COLUMN_DIRECTORY_PATH +" text not null, " 
-	        +  COLUMN_TIMELAPSE_ID + " integer not null, " + COLUMN_LAST_IMAGE_PATH +" text," 
-	        +  COLUMN_THUMBNAIL_PATH + " text, "
+	        +  COLUMN_TIMELAPSE_ID + " integer not null, " + COLUMN_LAST_IMAGE_PATH +" text, " 
+	        +  COLUMN_THUMBNAIL_PATH + " text, " + COLUMN_GIF_STATE + " integer not null default 0, "
+	        +  COLUMN_GIF_PATH + " text, "
 	        + "unique(id) on conflict replace);";
    
     //Schema: Number, Name, Datetime [YYYYMMDDKKMMSS]

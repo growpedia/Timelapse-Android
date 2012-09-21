@@ -3,11 +3,16 @@ package pro.dbro.timelapse;
 import pro.dbro.timelapse.service.GifExportService;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
@@ -22,7 +27,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class TimeLapseViewerActivity extends Activity {
 	
-	private static TimeLapseApplication tla;
+	public static TimeLapseApplication tla;
 	
 	// Store the title when the activity starts
 	// compare to title.getText() during onPause()
@@ -57,7 +62,7 @@ public class TimeLapseViewerActivity extends Activity {
         cameraButton = (ImageButton) findViewById(R.id.camera_button);
         exportButton =  (ImageButton) findViewById(R.id.export_button);
         cameraButton.setOnClickListener(cameraButtonListener);
-		exportButton.setOnClickListener(exportButtonListener);
+		// set exportButton listener pending gif state
         
         preview = (ImageView) findViewById(R.id.previewImage);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
@@ -65,6 +70,10 @@ public class TimeLapseViewerActivity extends Activity {
         
         Intent intent = getIntent();
         _id = intent.getExtras().getInt("_id");
+        
+        // LocalBroadCast Stuff
+        LocalBroadcastManager.getInstance(this).registerReceiver(serviceStateMessageReceiver,
+        	      new IntentFilter("service_status_change"));
 
         Log.d("TimeLapseViewerActivity", "TL id : " + String.valueOf(_id));
         
@@ -85,10 +94,10 @@ public class TimeLapseViewerActivity extends Activity {
         		preview.setImageBitmap(bmf.decodeFile(cursor.getString(cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_THUMBNAIL_PATH))));
         		preview.setVisibility(View.VISIBLE);
         		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
-        			int seekBarMax = 0;
-        			seekBarMax = cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1;
-        			Log.d("seekBarMax", String.valueOf(seekBarMax));
-        			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
+        			int image_count = 0;
+        			image_count = cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+        			Log.d("seekBarMax", String.valueOf(image_count-1));
+        			seekBar.setMax(image_count-1);
         			//seekBar.setSecondaryProgress(0);
         			if(seekBar.getMax() > 0){
         				Log.v("progressMAX", String.valueOf(seekBar.getMax()));
@@ -96,6 +105,14 @@ public class TimeLapseViewerActivity extends Activity {
         				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
         			}
         			timelapse_dir = cursor.getString(cursor.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+        			
+        			// Change export button to Share button if .gif exists
+        			if(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_GIF_STATE)) == image_count){
+        				setupShareButton();
+        			}
+        			else{
+        				setupExportButton();
+        			}
         		}
         	}
         }
@@ -119,16 +136,7 @@ public class TimeLapseViewerActivity extends Activity {
     	
     	// Save title if changed
     	// if new nonblank title input
-    	if( (title.getText().toString().compareTo("") == 0 ) 
-    			|| ( title.getText().toString().compareTo(originalTitle) == 0) ){
-			return;
-		}
-		else{
-			tla.updateTimeLapseById(_id, new String[] {SQLiteWrapper.COLUMN_NAME}, 
-												  new String[] {title.getText().toString()});
-			//Intent intent = new Intent(TimeLapseViewerActivity.this, BrowserActivity.class);
-            //startActivity(intent);
-		}	
+    	validateAndUpdateTitle();
     	
     }
     
@@ -152,18 +160,38 @@ public class TimeLapseViewerActivity extends Activity {
 	        		preview.setImageBitmap(bmf.decodeFile(cursor.getString(cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_THUMBNAIL_PATH))));
 	        		preview.setVisibility(View.VISIBLE);
 	        		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
-	        			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
+	        			int image_count = cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+	        			seekBar.setMax(image_count-1);
 	        			if(seekBar.getMax() > 1){
 	        				seekBar.setVisibility(View.VISIBLE);
 	        				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
 	        			}
+	        			// Change export button to Share button if .gif exists
+	        			if(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_GIF_STATE)) == image_count){
+	        				setupShareButton();
+	        			}
+	        			else{
+	        				setupExportButton();
+	        			}
 	        		}
+	        		
 	        	}
 	        }
 	    	preview_is_fresh = true;
 	    	cursor.close();
 		}
         
+    }
+    
+    public void validateAndUpdateTitle(){
+    	if( (title.getText().toString().compareTo("") == 0 ) 
+    			|| ( title.getText().toString().compareTo(originalTitle) == 0) ){
+			return;
+		}
+		else{
+			tla.updateTimeLapseById(_id, new String[] {SQLiteWrapper.COLUMN_NAME}, 
+												  new String[] {title.getText().toString()});
+		}
     }
     
     /*
@@ -265,6 +293,7 @@ public class TimeLapseViewerActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
+			validateAndUpdateTitle();
 			Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
         	i.putExtra("_id", _id);
         	Log.d("SERVICE","Starting");
@@ -272,4 +301,52 @@ public class TimeLapseViewerActivity extends Activity {
         	exportButton.setEnabled(false);
 		}
     };
+    
+    OnClickListener shareButtonListener = new OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+
+			Cursor result = tla.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_GIF_PATH});
+			String gifPath = null;
+			if(result != null && result.moveToFirst())
+				gifPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_GIF_PATH));
+			
+			if(gifPath != null){
+				// Intent to have system share gif
+				Intent notificationIntent = new Intent(Intent.ACTION_SEND);
+				notificationIntent.setType("image/gif");
+				notificationIntent.putExtra(Intent.EXTRA_STREAM,
+				Uri.parse("file://" + gifPath));
+				startActivity(notificationIntent);
+				
+				//PendingIntent contentIntent = PendingIntent.getActivity(GifExportService.this, 0, Intent.createChooser(notificationIntent, "Share .GIF"),0);
+			}
+		}
+    };
+    
+ // Called when message received
+    private BroadcastReceiver serviceStateMessageReceiver = new BroadcastReceiver() {
+    	  @Override
+    	  public void onReceive(Context context, Intent intent) {
+    	    // Get extra data included in the Intent
+    	    int status = intent.getIntExtra("status", -1);
+    	    if(status == 1){ // gif export successful
+    	    	Log.d("TimeLapseViewerActivity-BroadcastReceived", "service complete");
+    	    	setupShareButton();
+    	    }
+    	}
+    };
+    
+    public void setupExportButton(){
+    	exportButton.setOnClickListener(exportButtonListener);
+    	exportButton.setImageResource(R.drawable.film_lg);
+    	exportButton.setEnabled(true);
+    }
+    
+    public void setupShareButton(){
+    	exportButton.setOnClickListener(shareButtonListener);
+    	exportButton.setImageResource(R.drawable.share);
+    	exportButton.setEnabled(true);
+    }
 }

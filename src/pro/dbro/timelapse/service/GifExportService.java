@@ -27,6 +27,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 public class GifExportService extends IntentService {
@@ -158,6 +159,7 @@ public class GifExportService extends IntentService {
 		builder.setSmallIcon(R.drawable.ic_stat_timelapse)
 		.setTicker(result.getName() + " Exported!")
 		.setWhen(0)
+		.setAutoCancel(true)
 		.setContentTitle(result.getName() + " Exported!");
 		
 		notification = builder.getNotification();
@@ -206,6 +208,12 @@ public class GifExportService extends IntentService {
 				bos.write(_id);
 				// show notification offering to open file
 				showCompleteNotification(resultFile);
+				// record new gif state
+				tla.updateTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_GIF_STATE, SQLiteWrapper.COLUMN_GIF_PATH}, 
+						new String[]{String.valueOf(image_count), resultFile.getAbsolutePath()});
+				
+				// notify TimeLapseViewerActivity that export is complete
+				sendExportCompleteBroadcast();
 	            try {
 					bos.close();
 				} catch (IOException e) {
@@ -221,8 +229,6 @@ public class GifExportService extends IntentService {
 			}
 			 			
 			result.close();
-			
-		
 		}
 	}
 	
@@ -233,5 +239,12 @@ public class GifExportService extends IntentService {
 	         PackageManager.MATCH_DEFAULT_ONLY);
 	   return list.size() > 0;
 	} 
+	
+	public void sendExportCompleteBroadcast(){
+		Intent intent = new Intent("service_status_change");
+	  	  // You can also include some extra data.
+	  	  intent.putExtra("status", 1);
+	  	  LocalBroadcastManager.getInstance(TimeLapseViewerActivity.tla).sendBroadcast(intent);
+	}
 
 }

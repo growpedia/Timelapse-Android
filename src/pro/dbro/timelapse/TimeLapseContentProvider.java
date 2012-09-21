@@ -174,14 +174,17 @@ public class TimeLapseContentProvider extends ContentProvider {
 		}
 
 		private void checkColumns(String[] projection) {
+			/*
 			String[] available = { SQLiteWrapper.COLUMN_ID, SQLiteWrapper.COLUMN_CREATION_DATE, 
 					SQLiteWrapper.COLUMN_DESCRIPTION, SQLiteWrapper.COLUMN_DIRECTORY_PATH, 
 					SQLiteWrapper.COLUMN_IMAGE_COUNT, SQLiteWrapper.COLUMN_LAST_IMAGE_PATH, 
 					SQLiteWrapper.COLUMN_MODIFIED_DATE, SQLiteWrapper.COLUMN_NAME, 
-					SQLiteWrapper.COLUMN_THUMBNAIL_PATH, SQLiteWrapper.COLUMN_TIMELAPSE_ID };
+					SQLiteWrapper.COLUMN_THUMBNAIL_PATH, SQLiteWrapper.COLUMN_TIMELAPSE_ID,
+					SQLiteWrapper.COLUMN_GIF_PATH, SQLiteWrapper.COLUMN_GIF_STATE};
+					*/
 			if (projection != null) {
 				HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
-				HashSet<String> availableColumns = new HashSet<String>(Arrays.asList(available));
+				HashSet<String> availableColumns = new HashSet<String>(Arrays.asList(SQLiteWrapper.COLUMNS));
 				// Check if all columns which are requested are available
 				if (!availableColumns.containsAll(requestedColumns)) {
 					throw new IllegalArgumentException("Unknown columns in projection");
