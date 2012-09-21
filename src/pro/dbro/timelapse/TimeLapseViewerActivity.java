@@ -89,6 +89,7 @@ public class TimeLapseViewerActivity extends Activity {
         			seekBarMax = cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1;
         			Log.d("seekBarMax", String.valueOf(seekBarMax));
         			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
+        			//seekBar.setSecondaryProgress(0);
         			if(seekBar.getMax() > 0){
         				Log.v("progressMAX", String.valueOf(seekBar.getMax()));
         				seekBar.setVisibility(View.VISIBLE);
@@ -228,7 +229,6 @@ public class TimeLapseViewerActivity extends Activity {
 			
 			//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + File.pathSeparator + String.valueOf(progress)+".jpeg", 640, 480);
 			//preview.setImageBitmap(optimal_bitmap);
-			
 			preview.setImageBitmap(bmf.decodeFile(timelapse_dir + "/" + TimeLapse.thumbnail_dir + "/" + String.valueOf(progress+1)+TimeLapse.thumbnail_suffix + ".jpeg"));
 		}
 
