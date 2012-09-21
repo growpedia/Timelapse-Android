@@ -37,10 +37,10 @@ public class TimeLapse implements Serializable{
 	public static final String thumbnail_suffix = "_thumb";
 	@NotForDatabase
 	@NotForExport
-	public static int thumbnail_height = 100;	// pixels
+	public static int thumbnail_height = 240;	// pixels
 	@NotForDatabase
 	@NotForExport
-	public static int thumbnail_width = 100;	// pixels
+	public static int thumbnail_width = 320;	// pixels
 		
 	// List of filename Strings within directoryPath
 	//@NotForExport

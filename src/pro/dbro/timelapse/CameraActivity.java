@@ -233,7 +233,37 @@ public class CameraActivity extends Activity {
         			}
         			fadeOutAnimator = ObjectAnimator.ofFloat(undoLayout, "alpha", 100, 0);
         			fadeOutAnimator.setStartDelay(UNDO_DURATION);
-        			fadeOutAnimator.addListener(hideUndoListener);
+        			// prevent AnimationListener class to be exposed to incompatible API versions
+        			fadeOutAnimator.addListener(new AnimatorListener(){
+
+        				@Override
+        				public void onAnimationStart(Animator animation) {
+        					// TODO Auto-generated method stub
+        					
+        				}
+
+        				@SuppressLint("NewApi")
+        				@Override
+        				public void onAnimationEnd(Animator animation) {
+        					undoLayout.setVisibility(View.GONE);
+        					
+        				}
+
+        				@SuppressLint("NewApi")
+        				@Override
+        				public void onAnimationCancel(Animator animation) {
+        					// TODO Auto-generated method stub
+        					
+        				}
+
+        				@SuppressLint("NewApi")
+        				@Override
+        				public void onAnimationRepeat(Animator animation) {
+        					// TODO Auto-generated method stub
+        					
+        				}
+        				
+        			});
         			fadeOutAnimator.setDuration(FADE_DURATION);
         			fadeOutAnimator.start();
         			
@@ -336,7 +366,7 @@ public class CameraActivity extends Activity {
 		}
 		
 	};	
-	
+	/*
 	// Remove the undo view from the layout when the fade-out animation ends
 	@SuppressLint("NewApi")
 	private static AnimatorListener hideUndoListener = new AnimatorListener(){
@@ -369,5 +399,5 @@ public class CameraActivity extends Activity {
 		}
 		
 	};
-	   
+	   */
 }

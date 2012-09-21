@@ -58,16 +58,19 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_margin="10dp"
+        android:padding="10dp"
         android:progressDrawable="@drawable/seekbar_progress"
         android:thumb="@drawable/seekbar_thumb"
         android:visibility="gone" />
 
     <ImageView
         android:id="@+id/previewImage"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/seekBar"
-        android:layout_below="@id/create_timelapse_title"
+        android:layout_below="@id/camera_button"
         android:layout_gravity="center"
         android:scaleType="fitCenter"
         android:visibility="gone" />

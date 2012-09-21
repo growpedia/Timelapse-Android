@@ -1,5 +1,10 @@
 package pro.dbro.timelapse;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
 import pro.dbro.timelapse.service.GifExportService;
 
 import android.app.Activity;
@@ -10,18 +15,22 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
@@ -38,6 +47,8 @@ public class TimeLapseViewerActivity extends Activity {
 	private ImageButton exportButton;
 	private ImageView preview;
 	private SeekBar seekBar;
+	
+	private AnimationDrawable animation;
 	
 	private int preview_width = 0;
 	private int preview_height = 0;
@@ -65,6 +76,8 @@ public class TimeLapseViewerActivity extends Activity {
 		// set exportButton listener pending gif state
         
         preview = (ImageView) findViewById(R.id.previewImage);
+        preview.setOnClickListener(animationToggleListener);
+        
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         tla = (TimeLapseApplication)this.getApplicationContext();
         
@@ -325,6 +338,19 @@ public class TimeLapseViewerActivity extends Activity {
 		}
     };
     
+    OnClickListener animationToggleListener = new OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+			if(animation != null && animation.isRunning())
+				animation.stop();
+			else
+				prepareAnimation();
+		}
+    	
+    };
+
+    
  // Called when message received
     private BroadcastReceiver serviceStateMessageReceiver = new BroadcastReceiver() {
     	  @Override
@@ -349,4 +375,34 @@ public class TimeLapseViewerActivity extends Activity {
     	exportButton.setImageResource(R.drawable.share);
     	exportButton.setEnabled(true);
     }
+    
+    public void prepareAnimation(){
+    	final int FRAME_DURATION_MS = 100;
+    	Cursor result = tla.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_IMAGE_COUNT});
+    	int image_count = -1;
+    	if(result != null && result.moveToFirst())
+    		image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
+    	
+    	if(image_count == -1)
+    		return;
+    	
+    	animation = new AnimationDrawable();
+    	BufferedInputStream in;
+    	for(int x=0; x < image_count; x++){
+    		try {
+				in = new BufferedInputStream(new FileInputStream(new File(timelapse_dir + "/" + TimeLapse.thumbnail_dir + "/" + String.valueOf(x+1)+TimeLapse.thumbnail_suffix + ".jpeg")));
+				animation.addFrame(new BitmapDrawable(this.getResources(), in), FRAME_DURATION_MS);
+    		} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	animation.setOneShot(false); // make animation repeat
+    	//preview.setBackgroundDrawable(animation);
+    	preview.setImageDrawable(animation);
+    	preview.setScaleType(ScaleType.FIT_CENTER);
+    	animation.start();
+    	}
+    }
+    
+    
 }

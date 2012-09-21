@@ -76,6 +76,8 @@ public class GifExportService extends IntentService {
 			Notification.Builder builder = new Notification.Builder(c);
 			if(contentIntent != null)
 				builder.setContentIntent(contentIntent);
+			else
+				builder.setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0)); // blank intent
 			builder.setSmallIcon(R.drawable.ic_stat_timelapse)
 			.setTicker("Exporting " + name + ".GIF")
 			.setWhen(0)
@@ -90,6 +92,8 @@ public class GifExportService extends IntentService {
 			NotificationCompat.Builder builder = new NotificationCompat.Builder(c);
 			if(contentIntent != null)
 				builder.setContentIntent(contentIntent);
+			else
+				builder.setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0)); // blank intent
 			builder.setSmallIcon(R.drawable.ic_stat_timelapse)
 			.setTicker(getString(R.string.notification_export_ticker))
 			.setContentTitle("Exporting " + name + ".GIF")
@@ -111,6 +115,11 @@ public class GifExportService extends IntentService {
 					.setProgress(image_count,progress,false)
 					.setOngoing(true)
 					.setWhen(0);
+					
+					if(contentIntent != null)
+						builder.setContentIntent(contentIntent);
+					else
+						builder.setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0)); // blank intent
 					notification = builder.getNotification();
 				}
 				// Pre-ICS I'd have to set a custom notification contentView
@@ -122,6 +131,10 @@ public class GifExportService extends IntentService {
 					.setOngoing(true)
 					.setContentText("Processing frame " + String.valueOf(progress) + " of " + String.valueOf(image_count));
 					//.setProgress(100,0,false)
+					if(contentIntent != null)
+						builder.setContentIntent(contentIntent);
+					else
+						builder.setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0)); // blank intent
 					notification = builder.getNotification();
 				}
 				mNM.notify(EXPORTING_NOTIFICATION, notification);
@@ -130,7 +143,7 @@ public class GifExportService extends IntentService {
 	
 	@SuppressLint("NewApi")
 	private void showCompleteNotification(File result){
-		Notification.Builder builder = new Notification.Builder(c);
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(c);
 		
 		// Intent to have system view gif
 		/*
@@ -153,7 +166,7 @@ public class GifExportService extends IntentService {
 			builder.setContentIntent(contentIntent)
 			.setContentText("Touch to view");
 		}else{
-			builder.setContentText("Please install an app that can view .gifs");
+			builder.setContentText("Please install an app that can share .gifs");
 		}
 		
 		builder.setSmallIcon(R.drawable.ic_stat_timelapse)
@@ -161,6 +174,11 @@ public class GifExportService extends IntentService {
 		.setWhen(0)
 		.setAutoCancel(true)
 		.setContentTitle(result.getName() + " Exported!");
+		
+		if(contentIntent != null)
+			builder.setContentIntent(contentIntent);
+		else
+			builder.setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0)); // blank intent
 		
 		notification = builder.getNotification();
 		

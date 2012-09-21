@@ -26,7 +26,7 @@ public class AnimatedGifEncoder {
 
 	  protected int repeat = 0; // no repeat
 
-	  protected int delay = 0; // frame delay (hundredths)
+	  protected int delay = 10; // frame delay (hundredths)
 
 	  protected boolean started = false; // ready to output frames
 
