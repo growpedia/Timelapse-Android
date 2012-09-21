@@ -181,12 +181,8 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
  	@Override
  	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
  		Log.d("onLoadFinished", String.valueOf(data.getCount()));
- 		if(data.getCount() != 0){
- 			empty.setVisibility(View.GONE);
- 		}
- 		else{
- 			empty.setText(R.string.no_timelapses_found);
- 		}
+ 		empty.setVisibility(View.GONE);
+ 		// even if search returns nothing, we add new timelapses from the ListView header now
  		adapter.swapCursor(data);
  	}
 

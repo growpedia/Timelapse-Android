@@ -88,8 +88,11 @@ public class TimeLapseViewerActivity extends Activity {
         		preview.setImageBitmap(bmf.decodeFile(cursor.getString(cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_THUMBNAIL_PATH))));
         		preview.setVisibility(View.VISIBLE);
         		if(!cursor.isNull(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))){
+        			int seekBarMax = 0;
+        			seekBarMax = cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1;
+        			Log.d("seekBarMax", String.valueOf(seekBarMax));
         			seekBar.setMax(cursor.getInt(cursor.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT))-1);
-        			if(seekBar.getMax() > 1){
+        			if(seekBar.getMax() > 0){
         				Log.v("progressMAX", String.valueOf(seekBar.getMax()));
         				seekBar.setVisibility(View.VISIBLE);
         				seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);

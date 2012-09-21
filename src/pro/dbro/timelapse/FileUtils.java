@@ -373,9 +373,9 @@ public class FileUtils {
 					to_delete.delete();
 					
 					// Delete corresponding thumbnail
-					to_delete = new File(tlPath, TimeLapse.thumbnail_dir);
-					if(to_delete.exists() && to_delete.isDirectory()){
-						to_delete = new File(to_delete, String.valueOf(image_count) + TimeLapse.thumbnail_suffix + ".jpeg");
+					File thumbnail_dir = new File(tlPath, TimeLapse.thumbnail_dir);
+					if(thumbnail_dir.exists() && thumbnail_dir.isDirectory()){
+						to_delete = new File(thumbnail_dir, String.valueOf(image_count) + TimeLapse.thumbnail_suffix + ".jpeg");
 						to_delete.delete();
 					}
 					
@@ -385,7 +385,7 @@ public class FileUtils {
 						File new_last_image = new File(tlPath, String.valueOf(image_count-1) + ".jpeg");
 						if(new_last_image.exists())
 							last_image_path = new_last_image.getAbsolutePath();
-						File new_thumbnail = new File(tlPath, String.valueOf(image_count-1) + ".jpeg");
+						File new_thumbnail = new File(thumbnail_dir, String.valueOf(image_count-1) + TimeLapse.thumbnail_suffix + ".jpeg");
 						if(new_thumbnail.exists())
 							thumbnail_path = new_thumbnail.getAbsolutePath();
 						
