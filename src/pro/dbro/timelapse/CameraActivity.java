@@ -1,11 +1,8 @@
 package pro.dbro.timelapse;
 
 import java.io.File;
-import java.util.Date;
+import java.io.IOException;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import pro.dbro.timelapse.R.id;
 
 import android.animation.Animator;
@@ -28,12 +25,9 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewPropertyAnimator;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -86,28 +80,7 @@ public class CameraActivity extends Activity {
         
         undoLayout = (RelativeLayout) findViewById(id.undo_layout);
         undoLayout.setOnClickListener(undoOnClickListener);
-
-        // Obtain camera instance
-        mCamera = getCameraInstance();
-                
-        if (mCamera == null){
-        	showCameraErrorDialog();
-        }
-        else{
-        	// Camera is available. Onward Ho!
-        	
-        	// Assign Camera parameters
-        	setupCamera();
-	        // Obtain SurfaceView for displaying camera preview
-	        mCameraPreview = new CameraPreview(this, mCamera);
-	        FrameLayout preview = (FrameLayout) findViewById(id.camera_preview);
-	        preview.addView(mCameraPreview);
-	        
-	        // Set shutter touch listener to layout
-	        RelativeLayout container = (RelativeLayout) findViewById(id.container_layout);
-	        container.setOnTouchListener(shutterListener);
-	       
-        }
+    
        
     }
     /** End OnCreate() */
@@ -131,20 +104,34 @@ public class CameraActivity extends Activity {
     	
     	// Release camera for other applications
     	releaseCamera();
+    	this.finish();
     }
     
     @Override
     public void onResume(){
     	super.onResume();
-    	// If there is no camera instance, create one
-    	if(mCamera == null){
-    		//Log.d("OnResume","mCamera null");
-    		mCamera = getCameraInstance();
-    	}
-    	else{
-    		//Log.d("OnResume","mCamera not null");
-    	}
     	
+    	mCamera = getCameraInstance();
+    	if (mCamera == null){
+        	showCameraErrorDialog();
+        }
+    	
+    	// onCreate transplant
+    	// Camera is available. Onward Ho!
+    	
+    	// Assign Camera parameters
+    	setupCamera();
+        // Obtain SurfaceView for displaying camera preview
+        mCameraPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(id.camera_preview);
+        preview.addView(mCameraPreview);
+        
+        // Set shutter touch listener to layout
+        RelativeLayout container = (RelativeLayout) findViewById(id.container_layout);
+        container.setOnTouchListener(shutterListener);
+    	
+        // End onCreate transplant
+        
     	Intent intent = getIntent();
         
         _id = intent.getExtras().getInt("_id");
@@ -281,7 +268,7 @@ public class CameraActivity extends Activity {
 	
 	/** Show an AlertDialog corresponding to a Camera Error */
 	private void showCameraErrorDialog(){
-		AlertDialog noCameraAlertDialog = new AlertDialog.Builder(c)
+		AlertDialog noCameraAlertDialog = new AlertDialog.Builder(this.getBaseContext())
 		.setTitle(getResources().getStringArray(R.array.camera_error_dialog)[0])
 		.setMessage(getResources().getStringArray(R.array.camera_error_dialog)[1])
 		.setNeutralButton(getString(R.string.dialog_ok), new OnClickListener(){

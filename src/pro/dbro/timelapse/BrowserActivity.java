@@ -1,39 +1,20 @@
 package pro.dbro.timelapse;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.text.Html;
 import android.util.Log;
-import android.view.Display;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewPropertyAnimator;
 import android.view.Window;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -69,13 +50,10 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
         list.addHeaderView(this.getLayoutInflater().inflate(R.layout.browser_list_header, null));
         empty = (TextView) findViewById(android.R.id.empty);
         
-        // Establish LocalBroadcastManager for communication with other Classes
-        //LocalBroadcastManager.getInstance(this).registerReceiver(browserActivityMessageReceiver,
-      	//      new IntentFilter(String.valueOf(R.id.browserActivity_message)));
-        
         // Load Timelapses from external storage
         //Log.d("OnCreate","Beginning filesystem read");
-        new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
+        if(!tla.filesystemParsed)
+        	new FileUtils.ParseTimeLapsesFromFilesystem().execute("");
  
         getSupportLoaderManager().initLoader(0, null, this);
         adapter = new TimeLapseCursorAdapter(this, null);

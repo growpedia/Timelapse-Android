@@ -1,24 +1,22 @@
 package pro.dbro.timelapse;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Set;
-
 import android.app.ActivityManager;
 import android.app.Application;
 import android.app.ActivityManager.RunningServiceInfo;
-import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
 public class TimeLapseApplication extends Application {
+	
+	// Only parse the filesystem once per application launch
+	// Assume user isn't mucking around in there
+	// b/t onCreate and onDestroy
+	public static boolean filesystemParsed = false;
 	
 	/**
 	 * Content Resolver Wrapper methods
