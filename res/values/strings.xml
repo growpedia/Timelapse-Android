@@ -16,10 +16,22 @@
     <string name="create_timelapse_dialog_description_hint">Description</string>
     <string name="create_timelapse_button">Create TimeLapse</string>
     <string name="save_timelapse_button">Save</string>
-    
     <string name="no_timelapses_found">No TimeLapses Found</string>
-    
-    <!--  Service Notification -->
+
+    <!-- Service Notification -->
     <string name="notification_export_ticker">Exporting .GIF</string>
     <string name="notification_export_title">Exporting .GIF</string>
+
+    <!-- Trial notification text -->
+    <string name="notification_trial_nag">Hey friend, I\'m David. I made this thing! 
+        If you like TimeLapse please purchase the full version from Google Play!
+        You\'ll have access to all the projects you started here.
+        Spread good Karma by supporting our open-source software development.</string>
+    <string name="notification_trial_expire">        
+        &lt;h2>Trial Expired&lt;/h2>
+        Hey friend, I\'m David. I made this thing!
+        If you like TimeLapse please purchase the full version from Google Play! 
+        You\'ll have access to all the projects you started here.
+        Spread good Karma by supporting our open-source software development.</string>
+
 </resources>
