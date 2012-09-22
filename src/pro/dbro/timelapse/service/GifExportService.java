@@ -12,6 +12,7 @@ import pro.dbro.timelapse.BrowserActivity;
 import pro.dbro.timelapse.FileUtils;
 import pro.dbro.timelapse.R;
 import pro.dbro.timelapse.SQLiteWrapper;
+import pro.dbro.timelapse.TimeLapse;
 import pro.dbro.timelapse.TimeLapseApplication;
 import pro.dbro.timelapse.TimeLapseViewerActivity;
 import android.annotation.SuppressLint;
@@ -24,6 +25,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
@@ -39,7 +41,9 @@ public class GifExportService extends IntentService {
 	private int EXPORTING_NOTIFICATION = R.id.export_service_notification;
 	private int COMPLETE_NOTIFICATION = R.id.export_service_notification_complete;
 	
-	private PendingIntent contentIntent; // The intent to fire when notification clicked
+	BitmapFactory bmf = new BitmapFactory();
+	
+	private PendingIntent contentIntent = null; // The intent to fire when notification clicked
 
 	private int image_count = 0; // frames in gif
 	
@@ -110,8 +114,13 @@ public class GifExportService extends IntentService {
 	private void updateNotificationProgress(int progress){
 		// in ICS+, Progress bar notification is pre-rolled
 				if(Build.VERSION.SDK_INT >= 14 && progress <= image_count){
-					Notification.Builder builder = new Notification.Builder(c)
-					.setSmallIcon(R.drawable.ic_stat_timelapse)
+					Notification.Builder builder = new Notification.Builder(c);
+					if(contentIntent != null)
+						builder.setContentIntent(contentIntent);
+					else
+						builder.setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0)); // blank intent
+					
+					builder.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setProgress(image_count,progress,false)
 					.setOngoing(true)
 					.setWhen(0);
@@ -125,8 +134,13 @@ public class GifExportService extends IntentService {
 				// Pre-ICS I'd have to set a custom notification contentView
 				// not doing that atm
 				else{
-					NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
-					.setSmallIcon(R.drawable.ic_stat_timelapse)
+					NotificationCompat.Builder builder = new NotificationCompat.Builder(c);
+					if(contentIntent != null)
+						builder.setContentIntent(contentIntent);
+					else
+						builder.setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0)); // blank intent
+					
+					builder.setSmallIcon(R.drawable.ic_stat_timelapse)
 					.setWhen(0)
 					.setOngoing(true)
 					.setContentText("Processing frame " + String.valueOf(progress) + " of " + String.valueOf(image_count));
@@ -196,7 +210,12 @@ public class GifExportService extends IntentService {
 		Cursor result = tla.getTimeLapseById(_id, null);
 		if(result.moveToFirst()){
 			image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
-			String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+			
+			// if generating gif from full-size images:
+			//String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+			// if generating from thumbnails:
+			String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH)) + File.pathSeparator + TimeLapse.thumbnail_dir;
+			
 			String name = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_NAME));
 			//TODO: Do this proper
 			try {
@@ -215,7 +234,11 @@ public class GifExportService extends IntentService {
 				encoder.start(bos);
 				
 				for(int x = 1; x <= image_count; x++){
-					encoder.addFrame(FileUtils.decodeSampledBitmapFromResource(tlPath + "/" + String.valueOf(x)+".jpeg", 640, 480));
+					// If generating .gif from full-size images:
+					//encoder.addFrame(FileUtils.decodeSampledBitmapFromResource(tlPath + "/" + String.valueOf(x)+".jpeg", 320, 240));
+					// If generating .gif from thumbnails
+					encoder.addFrame(bmf.decodeFile(tlPath + "/" + String.valueOf(x) + TimeLapse.thumbnail_suffix + ".jpeg"));
+					
 					Log.d("gif","adding frame " + String.valueOf(x));
 					updateNotificationProgress(x);
 					//encoder.addFrame

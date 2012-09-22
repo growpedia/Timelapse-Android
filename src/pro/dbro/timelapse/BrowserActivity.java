@@ -89,70 +89,8 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 			}
 
 	    });
-		
-		checkTrialStatus();
 
-    }
-    
-    public void checkTrialStatus(){
-    	final long NAG_PERIOD = 1000*60*60*12; // 12 Hrs
-    	final long TRIAL_PERIOD = 1000*60*60*24*3; // 72 Hrs
-    	try{
-    		
-            Date trial_start = (Date)LocalPersistence.readObjectFromFile(c, "0o0");
-            // If stored StationSuggestions are found, apply them
-            if(trial_start == null){
-            	  trial_start = new Date();
-              	  LocalPersistence.writeObjectToFile(c, trial_start,"0o0");
-            }
-            else{
-          	  Date now = new Date();
-          	  if(now.getTime() - trial_start.getTime() > NAG_PERIOD)
-          	  Log.d("trialCheck","Expired"); 
-          	  
-	          	AlertDialog.Builder alertBuilder = new AlertDialog.Builder(c)
-	            .setTitle("Trial Expired")
-	            .setIcon(R.drawable.ic_launcher)
-	            .setNeutralButton("Support Me!", new DialogInterface.OnClickListener() {
-	                
-	                public void onClick(DialogInterface dialog, int which) {
-	                	Intent intent = new Intent(Intent.ACTION_VIEW);
-	                	intent.setData(Uri.parse("market://details?id=pro.dbro.timelapse"));
-	                	startActivity(intent);
-	                }
-	
-				 });
-	          	
-	          	final Activity this_activity = this;
-	          	
-	          	if(now.getTime() - trial_start.getTime() > TRIAL_PERIOD){
-	          		// User must quit if they don't support app
-	          		alertBuilder.setPositiveButton("Quit", new DialogInterface.OnClickListener() {
-						
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							this_activity.finish();
-							
-						}
-					});
-	          		TextView trialTv = (TextView) View.inflate(c, R.layout.tabletext, null);
-	          		trialTv.setText(Html.fromHtml(getString(R.string.notification_trial_expire)));
-	          		trialTv.setTextSize(18);
-	          		trialTv.setPadding(0, 0, 0, 0);
-	          		alertBuilder.setView(trialTv);
-	          	}
-	          	else{
-	          		// No thanks allows user to keep trucking!
-	          		alertBuilder.setPositiveButton("No Thanks", null);
-	          		alertBuilder.setMessage(R.string.notification_trial_nag);
-	          	}
-	            alertBuilder.show();
-                   
-            }
-    	  }
-          catch(Throwable t){
-          	// don't sweat it
-          }
+
     }
     
     public static TimeLapseApplication getContext() {
