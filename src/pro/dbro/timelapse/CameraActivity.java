@@ -36,6 +36,14 @@ import android.widget.Toast;
 
 @SuppressLint("NewApi")
 public class CameraActivity extends Activity {
+	
+	final static boolean TEST_FRONT_CAMERA = false;
+	public static boolean CAMERA_FRONT_FACING = false;
+	
+	// Camera size parameters
+	final int DESIRED_WIDTH = 640;
+	final int DESIRED_HEIGHT = 480;
+	
 	private Camera mCamera;
 	private static CameraPreview mCameraPreview;
 	private static TimeLapseApplication tla;
@@ -92,22 +100,31 @@ public class CameraActivity extends Activity {
     public static Camera getCameraInstance(){
         Camera c = null;
         try {
-        	// attempt to get a Camera instance for rear cam
-            c = Camera.open(); 
-            if(c == null){
-            	// Rear Camera is not available (in use or does not exist)
-        		// Try all other cameras
-            	int num_cameras = Camera.getNumberOfCameras();
-		    	for(int x=0; x < num_cameras;x++){
-		    		c = Camera.open(x);
-		    		if(c != null)
-		    			break;
-		        }
-            }
+        	if(TEST_FRONT_CAMERA){
+        		c = Camera.open(1);
+        		CAMERA_FRONT_FACING = true;
+        	}
+        	else{
+        		c = Camera.open(); 
+            
+	            if(c == null){
+	            	// Rear Camera is not available (in use or does not exist)
+	        		// Try all other cameras
+	            	int num_cameras = Camera.getNumberOfCameras();
+			    	for(int x=0; x < num_cameras;x++){
+			    		c = Camera.open(x);
+			    		if(c != null){
+			    			CAMERA_FRONT_FACING = true;
+			    			break;
+			    		}
+			        }
+	            }
+        	}
         }
         catch (Exception e){
         	Log.d("getCameraInstance",e.toString());
         }
+        
         return c; // returns null if camera is unavailable
     }
     
@@ -182,7 +199,7 @@ public class CameraActivity extends Activity {
 				if(!taking_picture){
 					taking_picture = true;
 					Log.d("CameraActivity","passing id to Camera " + String.valueOf(_id));
-					mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(_id));
+					mCamera.takePicture(CameraUtils.mShutterFeedback, null, null, new CameraUtils.TimeLapsePictureCallback(_id, CAMERA_FRONT_FACING));
 				}
 				// Consume touch event
 				return true;
@@ -330,9 +347,11 @@ public class CameraActivity extends Activity {
 		// set preview size and make any resize, rotate or
         // reformatting changes here
         
-        List supportedPictureSizes = mCamera.getParameters().getSupportedPictureSizes();
+        //List supportedPictureSizes = mCamera.getParameters().getSupportedPictureSizes();
         Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setPictureSize(((Camera.Size)supportedPictureSizes.get(0)).width, ((Camera.Size)supportedPictureSizes.get(0)).height);
+        parameters = setDesiredPictureSize(parameters);
+        // Uncomment to use largest possible picture size
+        //parameters.setPictureSize(((Camera.Size)supportedPictureSizes.get(0)).width, ((Camera.Size)supportedPictureSizes.get(0)).height);
         
         // Set autoFocus mode
         List supportedFocusModes = mCamera.getParameters().getSupportedFocusModes();
@@ -380,38 +399,40 @@ public class CameraActivity extends Activity {
 		}
 		
 	};	
-	/*
-	// Remove the undo view from the layout when the fade-out animation ends
-	@SuppressLint("NewApi")
-	private static AnimatorListener hideUndoListener = new AnimatorListener(){
+	
+	public Camera.Parameters setDesiredPictureSize(Camera.Parameters parameters){
+		List<Camera.Size> supportedPictureSizes = parameters.getSupportedPictureSizes();
 
-		@Override
-		public void onAnimationStart(Animator animation) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@SuppressLint("NewApi")
-		@Override
-		public void onAnimationEnd(Animator animation) {
-			undoLayout.setVisibility(View.GONE);
-			
-		}
-
-		@SuppressLint("NewApi")
-		@Override
-		public void onAnimationCancel(Animator animation) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@SuppressLint("NewApi")
-		@Override
-		public void onAnimationRepeat(Animator animation) {
-			// TODO Auto-generated method stub
-			
-		}
+		final double ASPECT_TOLERANCE = .001;
+		final double targetRatio = DESIRED_WIDTH / DESIRED_HEIGHT;
+		double minDiff = Double.MAX_VALUE;
 		
-	};
-	   */
+		// Try to find an size match aspect ratio and size
+        for (Size size : supportedPictureSizes) {
+            double ratio = (double) size.width / size.height;
+            //if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+            if (Math.abs(size.height - DESIRED_HEIGHT) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.height - DESIRED_HEIGHT);
+            }
+        }
+        /*
+        // Cannot find the one match the aspect ratio. This should not happen.
+        // Ignore the requirement.
+        if (optimalSize == null) {
+            Log.w(TAG, "No preview size match the aspect ratio");
+            minDiff = Double.MAX_VALUE;
+            for (Size size : supportedPictureSizes) {
+                if (Math.abs(size.height - DESIRED_HEIGHT) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.height - DESIRED_HEIGHT);
+                }
+            }
+            
+        }*/
+		Log.d("Camera size set",String.valueOf(optimalSize.width)+"x"+String.valueOf(optimalSize.height));
+        parameters.setPictureSize(optimalSize.width, optimalSize.height);
+		
+		return parameters;
+	}
 }

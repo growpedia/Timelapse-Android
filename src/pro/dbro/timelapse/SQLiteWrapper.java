@@ -106,7 +106,7 @@ public class SQLiteWrapper extends SQLiteOpenHelper {
 	            }
         	}
         }
-        
+        cursor.close();
     	return values;
     }
     

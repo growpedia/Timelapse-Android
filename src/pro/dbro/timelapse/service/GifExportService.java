@@ -70,7 +70,8 @@ public class GifExportService extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		int _id = intent.getExtras().getInt("_id");
-		generateGif(_id);
+		int resolution = intent.getExtras().getInt("resolution");
+		generateGif(_id, resolution);
 	}
 	
 	@SuppressLint("NewApi")
@@ -199,7 +200,7 @@ public class GifExportService extends IntentService {
 		mNM.notify(COMPLETE_NOTIFICATION, notification);
 	}
 	
-	public void generateGif(int _id){
+	public void generateGif(int _id, int resolution){
 		if(_id == -1){
 			Log.d("SERVICE","Error: no _id given");
 			return;
@@ -211,10 +212,15 @@ public class GifExportService extends IntentService {
 		if(result.moveToFirst()){
 			image_count = result.getInt(result.getColumnIndex(SQLiteWrapper.COLUMN_IMAGE_COUNT));
 			
+			String tlPath = null;
 			// if generating gif from full-size images:
-			//String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+			if(resolution == 480){
+				tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH));
+			}
+			else{
 			// if generating from thumbnails:
-			String tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH)) + File.pathSeparator + TimeLapse.thumbnail_dir;
+				tlPath = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_DIRECTORY_PATH)) + File.separator + TimeLapse.thumbnail_dir;
+			}
 			
 			String name = result.getString(result.getColumnIndex(SQLiteWrapper.COLUMN_NAME));
 			//TODO: Do this proper
@@ -234,10 +240,14 @@ public class GifExportService extends IntentService {
 				encoder.start(bos);
 				
 				for(int x = 1; x <= image_count; x++){
-					// If generating .gif from full-size images:
+
+					if(resolution == 480)
+						encoder.addFrame(bmf.decodeFile(tlPath + "/" + String.valueOf(x) + ".jpeg"));
+					else
+						encoder.addFrame(bmf.decodeFile(tlPath + "/" + String.valueOf(x) + TimeLapse.thumbnail_suffix + ".jpeg"));		
+					
+					// If downsampling images for giff:
 					//encoder.addFrame(FileUtils.decodeSampledBitmapFromResource(tlPath + "/" + String.valueOf(x)+".jpeg", 320, 240));
-					// If generating .gif from thumbnails
-					encoder.addFrame(bmf.decodeFile(tlPath + "/" + String.valueOf(x) + TimeLapse.thumbnail_suffix + ".jpeg"));
 					
 					Log.d("gif","adding frame " + String.valueOf(x));
 					updateNotificationProgress(x);

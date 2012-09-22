@@ -27,6 +27,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -418,10 +419,12 @@ public class FileUtils {
 		public static class SavePictureOnFilesystem extends AsyncTask<byte[], Void, String>{
 			
 			private int _id = -1;
+			private boolean front_facing = false;
 		
-			public SavePictureOnFilesystem(int _id){
+			public SavePictureOnFilesystem(int _id, boolean front_facing){
 				super();
 				this._id = _id;
+				this.front_facing = front_facing;
 				
 			}
 			// This method is executed in a separate thread
@@ -455,8 +458,13 @@ public class FileUtils {
 		        try {
 		        	Log.d("Writing picture",pictureFile.getAbsolutePath());
 		            FileOutputStream fos = new FileOutputStream(pictureFile);
-		            fos.write(input[0]);
-		            fos.close();
+		            if(front_facing){
+		            	flipImage(input[0], fos);
+		            }
+		            else{
+		            	fos.write(input[0]);
+		            	fos.close();
+		            }
 		        } catch (FileNotFoundException e) {
 		            Log.d(TAG, "File not found: " + e.getMessage());
 		        } catch (IOException e) {
@@ -499,6 +507,23 @@ public class FileUtils {
 				CameraActivity.setCameraOverlay(result, true);
 				CameraActivity.taking_picture = false;
 		    }
+			
+			private void flipImage(byte[] input, FileOutputStream fos){
+
+				Matrix rotate_matrix = new Matrix();
+				rotate_matrix.preScale(-1.0f, 1.0f);
+				BitmapFactory bmf = new BitmapFactory();
+				Bitmap raw_bitmap = bmf.decodeByteArray(input, 0, input.length);
+				Bitmap result = Bitmap.createBitmap(raw_bitmap, 0, 0, raw_bitmap.getWidth(), raw_bitmap.getHeight(), rotate_matrix, true);
+				result.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+				try {
+					fos.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
 			
 		}
 	

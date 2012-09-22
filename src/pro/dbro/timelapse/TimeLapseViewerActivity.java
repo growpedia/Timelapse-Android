@@ -8,9 +8,11 @@ import java.io.FileNotFoundException;
 import pro.dbro.timelapse.service.GifExportService;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -37,7 +39,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 public class TimeLapseViewerActivity extends Activity {
 	
 	public static TimeLapseApplication tla;
-	
+	private Context c;
 	// Store the title when the activity starts
 	// compare to title.getText() during onPause()
 	String originalTitle = "";
@@ -64,7 +66,7 @@ public class TimeLapseViewerActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        c = this;
         // With the ActionBar, we no longer need to hide the hideous Android Window Title
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.timelapse);
@@ -307,11 +309,38 @@ public class TimeLapseViewerActivity extends Activity {
 		@Override
 		public void onClick(View v) {
 			validateAndUpdateTitle();
-			Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
-        	i.putExtra("_id", _id);
-        	Log.d("SERVICE","Starting");
-        	startService(i);
-        	exportButton.setEnabled(false);
+
+			new AlertDialog.Builder(c)
+            .setTitle("Export .GIF")
+            .setIcon(R.drawable.ic_launcher)
+            .setMessage("Choose an output resolution")
+            .setPositiveButton("640x480", new DialogInterface.OnClickListener() {
+                
+                public void onClick(DialogInterface dialog, int which) {
+                	Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
+                	i.putExtra("_id", _id);
+                	i.putExtra("resolution", 480);
+                	Log.d("SERVICE","Starting");
+                	startService(i);
+                	exportButton.setEnabled(false);
+                }
+
+			 })
+            .setNeutralButton("320x240", new DialogInterface.OnClickListener() {
+                
+                public void onClick(DialogInterface dialog, int which) {
+                	Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
+                	i.putExtra("_id", _id);
+                	i.putExtra("resolution", 240);
+                	Log.d("SERVICE","Starting");
+                	startService(i);
+                	exportButton.setEnabled(false);
+                }
+
+			 })
+            .show();
+			
+        	
 		}
     };
     
