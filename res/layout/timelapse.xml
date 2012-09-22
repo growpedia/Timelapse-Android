@@ -18,7 +18,7 @@
 
     <ImageButton
         android:id="@+id/camera_button"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="50dp"
         android:layout_alignParentRight="true"
         android:layout_below="@id/create_timelapse_title"
@@ -30,13 +30,14 @@
         android:paddingRight="30dp"
         android:paddingTop="10dp"
         android:src="@drawable/camera_lg"
+        android:scaleType="fitCenter"
         android:textColor="@drawable/camera_button_text"
         android:textStyle="bold" >
     </ImageButton>
 
     <ImageButton
         android:id="@+id/export_button"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="50dp"
         android:layout_alignParentLeft="true"
         android:layout_below="@id/create_timelapse_title"
@@ -48,6 +49,7 @@
         android:paddingRight="30dp"
         android:paddingTop="10dp"
         android:src="@drawable/film_lg"
+        android:scaleType="fitCenter"
         android:textColor="@drawable/camera_button_text"
         android:textStyle="bold" >
     </ImageButton>
@@ -58,7 +60,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_margin="10dp"
-        android:padding="10dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
         android:progressDrawable="@drawable/seekbar_progress"
         android:thumb="@drawable/seekbar_thumb"
         android:visibility="gone" />

@@ -164,7 +164,7 @@ public class GifExportService extends IntentService {
 		
 		if(isIntentAvailable(c, notificationIntent)){
 			builder.setContentIntent(contentIntent)
-			.setContentText("Touch to view");
+			.setContentText("Touch to share");
 		}else{
 			builder.setContentText("Please install an app that can share .gifs");
 		}

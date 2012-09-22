@@ -11,6 +11,7 @@ import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
@@ -37,7 +38,8 @@ import android.widget.Toast;
 public class CameraActivity extends Activity {
 	private Camera mCamera;
 	private static CameraPreview mCameraPreview;
-	private static TimeLapseApplication c;
+	private static TimeLapseApplication tla;
+	private Context context;
 	private int _id;
 	
 	// The optimal image size for the device's screen
@@ -74,7 +76,8 @@ public class CameraActivity extends Activity {
         setContentView(R.layout.camera);
         
         // Store context for use by static methods
-        c = (TimeLapseApplication)getApplicationContext();
+        tla = (TimeLapseApplication)getApplicationContext();
+        context = this;
         cameraOverlay = (ImageView) findViewById(id.camera_overlay);
         cameraOverlay.setAlpha(100);
         
@@ -89,10 +92,20 @@ public class CameraActivity extends Activity {
     public static Camera getCameraInstance(){
         Camera c = null;
         try {
-            c = Camera.open(); // attempt to get a Camera instance
+        	// attempt to get a Camera instance for rear cam
+            c = Camera.open(); 
+            if(c == null){
+            	// Rear Camera is not available (in use or does not exist)
+        		// Try all other cameras
+            	int num_cameras = Camera.getNumberOfCameras();
+		    	for(int x=0; x < num_cameras;x++){
+		    		c = Camera.open(x);
+		    		if(c != null)
+		    			break;
+		        }
+            }
         }
         catch (Exception e){
-            // Camera is not available (in use or does not exist)
         	Log.d("getCameraInstance",e.toString());
         }
         return c; // returns null if camera is unavailable
@@ -115,43 +128,44 @@ public class CameraActivity extends Activity {
     	if (mCamera == null){
         	showCameraErrorDialog();
         }
-    	
-    	// onCreate transplant
-    	// Camera is available. Onward Ho!
-    	
-    	// Assign Camera parameters
-    	setupCamera();
-        // Obtain SurfaceView for displaying camera preview
-        mCameraPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(id.camera_preview);
-        preview.addView(mCameraPreview);
-        
-        // Set shutter touch listener to layout
-        RelativeLayout container = (RelativeLayout) findViewById(id.container_layout);
-        container.setOnTouchListener(shutterListener);
-    	
-        // End onCreate transplant
-        
-    	Intent intent = getIntent();
-        
-        _id = intent.getExtras().getInt("_id");
-        Log.d("CameraActivity","id received: " + String.valueOf(_id));
-        if(_id == -1){
-        	// create a new timelapse
-        	Uri new_timelapse = c.createTimeLapse(null,null);
-        	_id = Integer.parseInt(new_timelapse.getLastPathSegment());
-        	
-        }
-        Cursor timelapse_cursor = c.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
-        if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
-        	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
-        		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)), false);
-        	}
-        }
-
-        //Log.d("CameraActivity", String.valueOf(timelapse_cursor.isNull(timelapse_cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))));
-        //Log.d("CameraActivity","lastImagePath: " +  timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));    	
-        timelapse_cursor.close();
+    	else{
+	    	// onCreate transplant
+	    	// Camera is available. Onward Ho!
+	    	
+	    	// Assign Camera parameters
+	    	setupCamera();
+	        // Obtain SurfaceView for displaying camera preview
+	        mCameraPreview = new CameraPreview(this, mCamera);
+	        FrameLayout preview = (FrameLayout) findViewById(id.camera_preview);
+	        preview.addView(mCameraPreview);
+	        
+	        // Set shutter touch listener to layout
+	        RelativeLayout container = (RelativeLayout) findViewById(id.container_layout);
+	        container.setOnTouchListener(shutterListener);
+	    	
+	        // End onCreate transplant
+	        
+	    	Intent intent = getIntent();
+	        
+	        _id = intent.getExtras().getInt("_id");
+	        Log.d("CameraActivity","id received: " + String.valueOf(_id));
+	        if(_id == -1){
+	        	// create a new timelapse
+	        	Uri new_timelapse = tla.createTimeLapse(null,null);
+	        	_id = Integer.parseInt(new_timelapse.getLastPathSegment());
+	        	
+	        }
+	        Cursor timelapse_cursor = tla.getTimeLapseById(_id, new String[]{SQLiteWrapper.COLUMN_LAST_IMAGE_PATH});
+	        if (timelapse_cursor != null && timelapse_cursor.moveToFirst()) {
+	        	if(!timelapse_cursor.isNull(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))){
+	        		setCameraOverlay(timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)), false);
+	        	}
+	        }
+	
+	        //Log.d("CameraActivity", String.valueOf(timelapse_cursor.isNull(timelapse_cursor.getColumnIndexOrThrow(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH))));
+	        //Log.d("CameraActivity","lastImagePath: " +  timelapse_cursor.getString(timelapse_cursor.getColumnIndex(SQLiteWrapper.COLUMN_LAST_IMAGE_PATH)));    	
+	        timelapse_cursor.close();
+    	}
     }
 
     private OnTouchListener shutterListener = new OnTouchListener(){
@@ -282,7 +296,7 @@ public class CameraActivity extends Activity {
 		CharSequence text = "Saving Image...";
 		int duration = Toast.LENGTH_SHORT;
 
-		Toast toast = Toast.makeText(c, text, duration);
+		Toast toast = Toast.makeText(tla, text, duration);
 		toast.setGravity(Gravity.TOP, 0, 10);
 		toast.show();
 		
@@ -298,7 +312,7 @@ public class CameraActivity extends Activity {
 	
 	/** Show an AlertDialog corresponding to a Camera Error */
 	private void showCameraErrorDialog(){
-		AlertDialog noCameraAlertDialog = new AlertDialog.Builder(this.getBaseContext())
+		AlertDialog noCameraAlertDialog = new AlertDialog.Builder((Context)context)
 		.setTitle(getResources().getStringArray(R.array.camera_error_dialog)[0])
 		.setMessage(getResources().getStringArray(R.array.camera_error_dialog)[1])
 		.setNeutralButton(getString(R.string.dialog_ok), new OnClickListener(){
