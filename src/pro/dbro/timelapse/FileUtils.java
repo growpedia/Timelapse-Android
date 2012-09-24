@@ -659,7 +659,7 @@ public class FileUtils {
 			  JsonObject result = new JsonObject();
 			  result.addProperty("creation_date", src.getAsString(SQLiteWrapper.COLUMN_CREATION_DATE));
 			  result.addProperty("name", src.getAsString(SQLiteWrapper.COLUMN_NAME));
-			  result.addProperty("description", src.getAsString(SQLiteWrapper.COLUMN_DESCRIPTION));
+			  //result.addProperty("description", src.getAsString(SQLiteWrapper.COLUMN_DESCRIPTION));
 			  result.addProperty("modified_date", src.getAsString(SQLiteWrapper.COLUMN_MODIFIED_DATE));
 			  result.addProperty("id", src.getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID));
 			  result.addProperty("image_count", src.getAsInteger(SQLiteWrapper.COLUMN_IMAGE_COUNT));
@@ -678,7 +678,7 @@ public class FileUtils {
 		    try{
 			    result.put(SQLiteWrapper.COLUMN_CREATION_DATE, jsonObject.get("creation_date").getAsString());
 			    result.put(SQLiteWrapper.COLUMN_NAME, jsonObject.get("name").getAsString());
-			    result.put(SQLiteWrapper.COLUMN_DESCRIPTION, jsonObject.get("description").getAsString());
+			    //result.put(SQLiteWrapper.COLUMN_DESCRIPTION, jsonObject.get("description").getAsString());
 			    result.put(SQLiteWrapper.COLUMN_MODIFIED_DATE, jsonObject.get("modified_date").getAsString());
 			    result.put(SQLiteWrapper.COLUMN_IMAGE_COUNT, jsonObject.get("image_count").getAsString());
 			    result.put(SQLiteWrapper.COLUMN_TIMELAPSE_ID, jsonObject.get("id").getAsString());

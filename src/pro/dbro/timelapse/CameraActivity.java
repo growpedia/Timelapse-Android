@@ -237,7 +237,7 @@ public class CameraActivity extends Activity {
         	
         	if(showUndo){
         		// Fade in/out the undo button if sdk allows
-        		if(Build.VERSION.SDK_INT >= 12){
+        		if(Build.VERSION.SDK_INT >= 14){
         			undoLayout.setAlpha(0);
         			undoLayout.setVisibility(View.VISIBLE);
         			

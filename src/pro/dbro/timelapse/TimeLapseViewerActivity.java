@@ -1,15 +1,9 @@
 package pro.dbro.timelapse;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
 import pro.dbro.timelapse.service.GifExportService;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,22 +11,18 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
-import android.view.View.OnLongClickListener;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
@@ -50,7 +40,7 @@ public class TimeLapseViewerActivity extends Activity {
 	private ImageView preview;
 	private SeekBar seekBar;
 	
-	private AnimationDrawable animation;
+	AnimationTimer animation;
 	
 	private int preview_width = 0;
 	private int preview_height = 0;
@@ -265,13 +255,12 @@ public class TimeLapseViewerActivity extends Activity {
 		@Override
 		public void onProgressChanged(SeekBar seekBar, int progress,
 				boolean fromUser) {
-				
-			Log.v("Seek",String.valueOf(progress));
-			//Log.d("preview size", String.valueOf(width)+ "x" + String.valueOf(height));
-			//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + "/" + String.valueOf(progress+1)+".jpeg", preview_width, preview_height);
+			//Log.v("Seek",String.valueOf(progress));
+			if(animation != null){
+				animation.cancel();
+				animation = null;
+			}
 			
-			//Bitmap optimal_bitmap = FileUtils.decodeSampledBitmapFromResource(timelapse_dir + File.pathSeparator + String.valueOf(progress)+".jpeg", 640, 480);
-			//preview.setImageBitmap(optimal_bitmap);
 			preview.setImageBitmap(bmf.decodeFile(timelapse_dir + "/" + TimeLapse.thumbnail_dir + "/" + String.valueOf(progress+1)+TimeLapse.thumbnail_suffix + ".jpeg"));
 		}
 
@@ -364,6 +353,7 @@ public class TimeLapseViewerActivity extends Activity {
 				
 				//PendingIntent contentIntent = PendingIntent.getActivity(GifExportService.this, 0, Intent.createChooser(notificationIntent, "Share .GIF"),0);
 			}
+			result.close();
 		}
     };
     
@@ -371,8 +361,10 @@ public class TimeLapseViewerActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			if(animation != null && animation.isRunning())
-				animation.stop();
+			if(animation != null){
+				animation.cancel();
+				animation = null;
+			}
 			else
 				prepareAnimation();
 		}
@@ -415,22 +407,11 @@ public class TimeLapseViewerActivity extends Activity {
     	if(image_count == -1)
     		return;
     	
-    	animation = new AnimationDrawable();
-    	BufferedInputStream in;
-    	for(int x=0; x < image_count; x++){
-    		try {
-				in = new BufferedInputStream(new FileInputStream(new File(timelapse_dir + "/" + TimeLapse.thumbnail_dir + "/" + String.valueOf(x+1)+TimeLapse.thumbnail_suffix + ".jpeg")));
-				animation.addFrame(new BitmapDrawable(this.getResources(), in), FRAME_DURATION_MS);
-    		} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    	animation.setOneShot(false); // make animation repeat
-    	//preview.setBackgroundDrawable(animation);
-    	preview.setImageDrawable(animation);
-    	preview.setScaleType(ScaleType.FIT_CENTER);
+    	animation = new AnimationTimer(100*image_count, 100, preview, timelapse_dir);
     	animation.start();
-    	}
+    	
+    	result.close();
+    	
     }
     
     
