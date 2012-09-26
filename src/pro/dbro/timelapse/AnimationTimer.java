@@ -23,16 +23,19 @@ import android.graphics.BitmapFactory;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 
 public class AnimationTimer extends CountDownTimer {
 	
 	private ImageView image_view;
+	private SeekBar progress;
 	
 	BitmapFactory bmf = new BitmapFactory();
 	
 	long millisInFuture;
 	long countDownInterval;
 	int image_count;
+	int offset; // begin animation at seekBar state
 	String timelapse_dir;
 
 	// countDownInterval corresponds to frame rate
@@ -41,31 +44,35 @@ public class AnimationTimer extends CountDownTimer {
 		super(millisInFuture, countDownInterval);
 		// TODO Auto-generated constructor stub
 	}
-	public AnimationTimer(long millisInFuture, long countDownInterval, ImageView image_view, String timelapse_dir) {
+	public AnimationTimer(long millisInFuture, long countDownInterval, ImageView image_view, SeekBar progress, String timelapse_dir) {
 		super(millisInFuture, countDownInterval);
 		this.image_view = image_view;
 		this.millisInFuture = millisInFuture;
 		this.countDownInterval = countDownInterval;
 		this.image_count = (int) (millisInFuture / countDownInterval);
+		this.progress = progress;
+		this.offset = progress.getProgress();
 		this.timelapse_dir = timelapse_dir;
-		
+
 	}
 
 	@Override
 	public void onFinish() {
-		
+		this.offset = 0;
 		this.start();
 	}
 
 	@Override
 	public void onTick(long millisUntilFinished) {
 		int frame = 0;
-		
+
 		if(millisUntilFinished != 0){
-			frame = image_count - ((int) (millisUntilFinished / countDownInterval ));
-			Log.d("AnimationTimer",String.valueOf(frame));
+			frame = image_count - ((int) (millisUntilFinished / countDownInterval )) + offset;
+			if(frame >= image_count)
+				this.onFinish();
+			//Log.d("AnimationTimer",String.valueOf(frame));
 		}
-		
+		progress.setProgress(frame);
 		image_view.setImageBitmap(bmf.decodeFile(timelapse_dir + "/" + TimeLapse.thumbnail_dir + "/" + String.valueOf(frame+1)+TimeLapse.thumbnail_suffix + ".jpeg"));
 		
 		

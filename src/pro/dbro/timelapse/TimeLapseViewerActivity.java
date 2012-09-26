@@ -255,7 +255,10 @@ public class TimeLapseViewerActivity extends Activity {
 		@Override
 		public void onProgressChanged(SeekBar seekBar, int progress,
 				boolean fromUser) {
-			//Log.v("Seek",String.valueOf(progress));
+			//Log.d("Seek",String.valueOf(progress));
+			if(!fromUser)
+				return;
+
 			if(animation != null){
 				animation.cancel();
 				animation = null;
@@ -406,8 +409,7 @@ public class TimeLapseViewerActivity extends Activity {
     	
     	if(image_count == -1)
     		return;
-    	
-    	animation = new AnimationTimer(100*image_count, 100, preview, timelapse_dir);
+    	animation = new AnimationTimer(FRAME_DURATION_MS * image_count, FRAME_DURATION_MS, preview, seekBar, timelapse_dir);
     	animation.start();
     	
     	result.close();
