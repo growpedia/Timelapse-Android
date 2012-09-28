@@ -420,22 +420,27 @@ public class FileUtils {
 			
 			private int _id = -1;
 			private boolean front_facing = false;
+			private boolean portrait = false;
 		
-			public SavePictureOnFilesystem(int _id, boolean front_facing){
+			public SavePictureOnFilesystem(int _id, boolean front_facing, boolean portrait){
 				super();
 				this._id = _id;
 				this.front_facing = front_facing;
+				this.portrait = portrait;
 				
 			}
 			// This method is executed in a separate thread
 			@Override
 			protected String doInBackground(byte[]... input) {
+				TimeLapseApplication tla = BrowserActivity.getContext();
 				if(_id == -1){
 					Log.d(TAG,"Error: no _id given");
+					//Uri new_timelapse = tla.createTimeLapse(null, null);
+					//_id = Integer.parseInt(new_timelapse.getLastPathSegment());
 					return "";
 				}
 				Log.d("SavePicture","Reading contentprovider " + String.valueOf(_id));
-				TimeLapseApplication tla = BrowserActivity.getContext();
+				
 		        ContentValues tl = SQLiteWrapper.cursorRowToContentValues(tla.getTimeLapseById(_id, null));
 		        int timelapse_id = tl.getAsInteger(SQLiteWrapper.COLUMN_TIMELAPSE_ID);
 		        if(!tl.containsKey(SQLiteWrapper.COLUMN_DIRECTORY_PATH)){
@@ -458,13 +463,29 @@ public class FileUtils {
 		        try {
 		        	Log.d("Writing picture",pictureFile.getAbsolutePath());
 		            FileOutputStream fos = new FileOutputStream(pictureFile);
+		            Bitmap final_bitmap = null;
+		            int orientation = 0;
 		            if(front_facing){
-		            	flipImage(input[0], fos);
+		            	final_bitmap = flipImage(input[0], fos);
+		            }else{
+		            	final_bitmap = BitmapFactory.decodeByteArray(input[0], 0, input[0].length, null);
 		            }
-		            else{
-		            	fos.write(input[0]);
-		            	fos.close();
+		            //Log.d("bitmap_dimensions",String.valueOf(final_bitmap.getHeight() + " x " + String.valueOf(final_bitmap.getWidth())));
+		            //if(final_bitmap.getHeight() < final_bitmap.getWidth()){
+		            if(portrait){
+		                orientation = 90;
+		            } else {
+		                orientation = 0;
 		            }
+		            
+		            if (orientation != 0) {
+		                Matrix matrix = new Matrix();
+		                matrix.postRotate(orientation);
+		                final_bitmap = Bitmap.createBitmap(final_bitmap, 0, 0, final_bitmap.getWidth(),
+		                		final_bitmap.getHeight(), matrix, true);
+		            }
+		            final_bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+		            fos.close();
 		        } catch (FileNotFoundException e) {
 		            Log.d(TAG, "File not found: " + e.getMessage());
 		        } catch (IOException e) {
@@ -508,13 +529,16 @@ public class FileUtils {
 				CameraActivity.taking_picture = false;
 		    }
 			
-			private void flipImage(byte[] input, FileOutputStream fos){
+			// Horizontally flip image to compensate for front-camera behavior
+			private Bitmap flipImage(byte[] input, FileOutputStream fos){
 
 				Matrix rotate_matrix = new Matrix();
 				rotate_matrix.preScale(-1.0f, 1.0f);
 				BitmapFactory bmf = new BitmapFactory();
 				Bitmap raw_bitmap = bmf.decodeByteArray(input, 0, input.length);
 				Bitmap result = Bitmap.createBitmap(raw_bitmap, 0, 0, raw_bitmap.getWidth(), raw_bitmap.getHeight(), rotate_matrix, true);
+				return result;
+				/*
 				result.compress(Bitmap.CompressFormat.JPEG, 90, fos);
 				try {
 					fos.close();
@@ -522,7 +546,7 @@ public class FileUtils {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+				*/
 			}
 			
 		}

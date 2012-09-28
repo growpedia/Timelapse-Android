@@ -24,16 +24,18 @@ public class CameraUtils {
 	public static class TimeLapsePictureCallback implements PictureCallback{
 		private int _id = -1;
 		private boolean front_facing = false;
+		private boolean portrait = false;
 		
-		public TimeLapsePictureCallback(int _id, boolean front_facing){
+		public TimeLapsePictureCallback(int _id, boolean front_facing, boolean portrait){
 			this._id = _id;
 			this.front_facing = front_facing;
+			this.portrait = portrait;
 		}
 		
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			Log.d("CameraUtils","passing id to FileUtils.save: " + String.valueOf(_id));
-			new FileUtils.SavePictureOnFilesystem(_id, front_facing).execute(data);
+			new FileUtils.SavePictureOnFilesystem(_id, front_facing, portrait).execute(data);
 		}
 	}
 	

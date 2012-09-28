@@ -70,7 +70,7 @@ public class AnimationTimer extends CountDownTimer {
 			frame = image_count - ((int) (millisUntilFinished / countDownInterval )) + offset;
 			if(frame >= image_count)
 				this.onFinish();
-			//Log.d("AnimationTimer",String.valueOf(frame));
+			Log.d("AnimationTimer",String.valueOf(frame));
 		}
 		progress.setProgress(frame);
 		image_view.setImageBitmap(bmf.decodeFile(timelapse_dir + "/" + TimeLapse.thumbnail_dir + "/" + String.valueOf(frame+1)+TimeLapse.thumbnail_suffix + ".jpeg"));
