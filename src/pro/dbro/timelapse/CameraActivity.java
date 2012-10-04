@@ -504,7 +504,7 @@ public class CameraActivity extends Activity {
 		final double targetRatio = DESIRED_WIDTH / DESIRED_HEIGHT;
 		double minDiff = Double.MAX_VALUE;
 
-		// Try to find an size match aspect ratio and size
+		// Try to find an size match aspect ratio and size.
 		for (Size size : supportedPictureSizes) {
 			double ratio = (double) size.width / size.height;
 			// if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;

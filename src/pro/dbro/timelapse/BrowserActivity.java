@@ -71,20 +71,23 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				final int _id = (Integer) view.getTag(R.id.view_related_timelapse);
-				new AlertDialog.Builder(c)
-	            .setTitle("Delete Timelapse?")
-	            .setIcon(R.drawable.ic_launcher)
-	            .setMessage("This will permanently delete this timelapse and all it's raw photo files.")
-	            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-	                
-	                public void onClick(DialogInterface dialog, int which) {
-	                	new FileUtils.deleteTimeLapse().execute(_id);
-	                }
-
-				 })
-	            .setNeutralButton("Cancel", null)
-	            .show();
+				// Don't attempt delete logic on header list item
+				if(position != 0){
+					final int _id = (Integer) view.getTag(R.id.view_related_timelapse);
+					new AlertDialog.Builder(c)
+		            .setTitle("Delete Timelapse?")
+		            .setIcon(R.drawable.ic_launcher)
+		            .setMessage("This will permanently delete this timelapse and all it's raw photo files.")
+		            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+		                
+		                public void onClick(DialogInterface dialog, int which) {
+		                	new FileUtils.deleteTimeLapse().execute(_id);
+		                }
+	
+					 })
+		            .setNeutralButton("Cancel", null)
+		            .show();
+				}
 				return false;
 			}
 
@@ -92,10 +95,7 @@ public class BrowserActivity extends FragmentActivity implements LoaderManager.L
 
 
     }
-    
-    public static TimeLapseApplication getContext() {
-        return tla;
-    }
+
     
     // Handle listview item select
 	public OnItemClickListener listItemClickListener = new OnItemClickListener(){

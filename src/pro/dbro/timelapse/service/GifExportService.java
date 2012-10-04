@@ -206,7 +206,7 @@ public class GifExportService extends IntentService {
 			return;
 		}
 		String gifPath;
-		TimeLapseApplication tla = BrowserActivity.getContext();
+		TimeLapseApplication tla = TimeLapseApplication.applicationContext;
 		
 		Cursor result = tla.getTimeLapseById(_id, null);
 		if(result.moveToFirst()){

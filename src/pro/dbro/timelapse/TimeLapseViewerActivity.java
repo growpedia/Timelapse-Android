@@ -143,6 +143,12 @@ public class TimeLapseViewerActivity extends Activity {
     	// if new nonblank title input
     	validateAndUpdateTitle();
     	
+    	// Cancel animation
+    	if(animation != null){
+			animation.cancel();
+			animation = null;
+		}
+    	
     }
     
     @Override
@@ -235,7 +241,7 @@ public class TimeLapseViewerActivity extends Activity {
             case R.id.menu_export:
             	// make GIF
             	if(_id != -1 && !tla.serviceIsRunning()){
-            		Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
+            		Intent i = new Intent(TimeLapseApplication.applicationContext, GifExportService.class);
                 	i.putExtra("_id", _id);
                 	Log.d("SERVICE","Starting");
                 	startService(i);
@@ -309,7 +315,7 @@ public class TimeLapseViewerActivity extends Activity {
             .setPositiveButton("640x480", new DialogInterface.OnClickListener() {
                 
                 public void onClick(DialogInterface dialog, int which) {
-                	Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
+                	Intent i = new Intent(TimeLapseViewerActivity.this, GifExportService.class);
                 	i.putExtra("_id", _id);
                 	i.putExtra("resolution", 480);
                 	Log.d("SERVICE","Starting");
@@ -321,7 +327,7 @@ public class TimeLapseViewerActivity extends Activity {
             .setNeutralButton("320x240", new DialogInterface.OnClickListener() {
                 
                 public void onClick(DialogInterface dialog, int which) {
-                	Intent i = new Intent(BrowserActivity.getContext(), GifExportService.class);
+                	Intent i = new Intent(TimeLapseViewerActivity.this, GifExportService.class);
                 	i.putExtra("_id", _id);
                 	i.putExtra("resolution", 240);
                 	Log.d("SERVICE","Starting");

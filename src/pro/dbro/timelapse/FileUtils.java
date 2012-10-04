@@ -52,9 +52,9 @@ public class FileUtils {
 	
 	public static File getExternalStorage(){
 		// Check if storage preference exists:
-		SharedPreferences prefs = BrowserActivity.getContext().getSharedPreferences(BrowserActivity.PREFS_NAME, 0);
+		SharedPreferences prefs = TimeLapseApplication.applicationContext.getSharedPreferences(BrowserActivity.PREFS_NAME, 0);
 		if(prefs.contains(BrowserActivity.PREFS_STORAGE_LOCATION)){
-			return new File(prefs.getString(BrowserActivity.PREFS_STORAGE_LOCATION, BrowserActivity.getContext().getFilesDir().getAbsolutePath()));
+			return new File(prefs.getString(BrowserActivity.PREFS_STORAGE_LOCATION, TimeLapseApplication.applicationContext.getFilesDir().getAbsolutePath()));
 		}
 		else{
 			SharedPreferences.Editor editor = prefs.edit();
@@ -66,7 +66,7 @@ public class FileUtils {
 			} else {
 			// Else, use the internal storage directory for this application
 				Log.d("MediaDir","Using internal storage");
-				result = new File(BrowserActivity.getContext().getFilesDir(), MEDIA_DIRECTORY);
+				result = new File(TimeLapseApplication.applicationContext.getFilesDir(), MEDIA_DIRECTORY);
 			}
 			editor.putString(BrowserActivity.PREFS_STORAGE_LOCATION, result.getAbsolutePath());
 			editor.commit();
@@ -139,7 +139,7 @@ public class FileUtils {
 		// This method is executed in a separate thread
 		@Override
 		protected Boolean doInBackground(String... filePath) {
-			TimeLapseApplication tla = BrowserActivity.getContext();
+			TimeLapseApplication tla = TimeLapseApplication.applicationContext;
 
 			// For now, hardcode filePath directory
 			//File dir = new File(filePath[0]);
@@ -217,7 +217,7 @@ public class FileUtils {
 	    }
 		
 		private void sendMessage(Boolean result) {
-			BrowserActivity.getContext().filesystemParsed = true;
+			TimeLapseApplication.applicationContext.filesystemParsed = true;
 		}
 		
 		
@@ -278,7 +278,7 @@ public class FileUtils {
 		  	  intent.putExtra("timelapse_id", result);
 		  	  intent.putExtra("type", R.id.filesystem_modified);
 		  	  // TODO: Only update the part of the ListView that is necessary
-		  	  LocalBroadcastManager.getInstance(BrowserActivity.getContext()).sendBroadcast(intent);
+		  	  LocalBroadcastManager.getInstance(TimeLapseApplication.applicationContext).sendBroadcast(intent);
 		}
 		
 	}
@@ -294,7 +294,7 @@ public class FileUtils {
 					return false;
 				}
 				
-				TimeLapseApplication tla = BrowserActivity.getContext();
+				TimeLapseApplication tla = TimeLapseApplication.applicationContext;
 				
 				Cursor result = tla.getTimeLapseById(input[0], null);
 				if(result.moveToFirst()){
@@ -340,7 +340,7 @@ public class FileUtils {
 					return null;
 				}
 				
-				TimeLapseApplication tla = BrowserActivity.getContext();
+				TimeLapseApplication tla = TimeLapseApplication.applicationContext;
 				// Check that image_count -1 is available in image and thumb dir
 				// delete image and thumb corresponding to image_count
 				// updateTimeLapse method to update JSON
@@ -432,7 +432,7 @@ public class FileUtils {
 			// This method is executed in a separate thread
 			@Override
 			protected String doInBackground(byte[]... input) {
-				TimeLapseApplication tla = BrowserActivity.getContext();
+				TimeLapseApplication tla = TimeLapseApplication.applicationContext;
 				if(_id == -1){
 					Log.d(TAG,"Error: no _id given");
 					//Uri new_timelapse = tla.createTimeLapse(null, null);

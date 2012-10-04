@@ -7,16 +7,24 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
 public class TimeLapseApplication extends Application {
 	
+	public static TimeLapseApplication applicationContext;
+	
 	// Only parse the filesystem once per application launch
 	// Assume user isn't mucking around in there
 	// b/t onCreate and onDestroy
 	public static boolean filesystemParsed = false;
+	
+	public void onCreate(){
+        super.onCreate();
+        this.applicationContext = this;
+    }
 	
 	/**
 	 * Content Resolver Wrapper methods
